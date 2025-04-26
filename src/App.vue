@@ -122,6 +122,96 @@ const candles = ref([
     date: "2024-05-01",
     volume: 1000,
   },
+  {
+    time: 3,
+    open: 18,
+    high: 15,
+    low: 17,
+    close: 19,
+    date: "2024-05-02",
+    volume: 500,
+  },
+  {
+    time: 4,
+    open: 55,
+    high: 15,
+    low: 23,
+    close: 11,
+    date: "2024-05-03",
+    volume: 4000,
+  },
+  {
+    time: 5,
+    open: 106,
+    high: 109,
+    low: 100,
+    close: 101,
+    date: "2024-05-04",
+    volume: 6000,
+  },
+  {
+    time: 6,
+    open: 101,
+    high: 103,
+    low: 97,
+    close: 100,
+    date: "2024-05-06",
+    volume: 2000,
+  },
+  {
+    time: 7,
+    open: 200,
+    high: 105,
+    low: 98,
+    close: 104,
+    date: "2024-05-07",
+    volume: 1000,
+  },
+  {
+    time: 3,
+    open: 18,
+    high: 15,
+    low: 17,
+    close: 19,
+    date: "2024-05-02",
+    volume: 500,
+  },
+  {
+    time: 4,
+    open: 55,
+    high: 15,
+    low: 23,
+    close: 11,
+    date: "2024-05-03",
+    volume: 4000,
+  },
+  {
+    time: 5,
+    open: 106,
+    high: 109,
+    low: 100,
+    close: 101,
+    date: "2024-05-04",
+    volume: 6000,
+  },
+  {
+    time: 6,
+    open: 101,
+    high: 103,
+    low: 97,
+    close: 100,
+    date: "2024-05-06",
+    volume: 2000,
+  },
+  {
+    time: 7,
+    open: 200,
+    high: 105,
+    low: 98,
+    close: 550,
+    date: "2024-05-07",
+    volume: 1000,
+  },
 ]);
 
 function drawGrid(ctx) {
@@ -553,10 +643,29 @@ onMounted(() => {
 
   ctx.value = mainCanvas.value.getContext("2d");
   priceCtx.value = priceCanvas.value.getContext("2d");
-  timeCtx.value = timeCanvas.value.getContext("2d");
+
+  const visibleCandles = 10;
+  const availableWidth = width.value / 2;
+
+  let totalCandleWidth = candleWidth.value + spacing.value;
+  let neededTotalWidth = visibleCandles * totalCandleWidth;
+
+  if (neededTotalWidth > availableWidth) {
+    const newCandleWidth = Math.floor(availableWidth / (visibleCandles * 1.5));
+    candleWidth.value = Math.max(2, newCandleWidth);
+    spacing.value = Math.max(1, Math.floor(candleWidth.value / 3));
+  }
+
+  scale.value = 2; // Базовый масштаб
+
+  const totalCandles = candles.value.length;
+  const fullWidth = totalCandles * (candleWidth.value + spacing.value);
+
+  offset.value.x = Math.min(0, width.value - fullWidth);
 
   drawChart();
 });
+
 </script>
 
 <style scoped>
