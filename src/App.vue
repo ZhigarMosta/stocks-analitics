@@ -73,7 +73,6 @@ function drawGrid(ctx) {
   ctx.strokeStyle = "#e0e0e0";
   ctx.lineWidth = 1;
 
-  // === Горизонтальная сетка (цены)
   const stepPxY = 50;
   const stepPrice = stepPxY / priceScale.value;
   const minYPrice = priceFromY(height);
@@ -92,8 +91,7 @@ function drawGrid(ctx) {
     ctx.stroke();
   }
 
-  // === Вертикальная сетка (время/равномерно по ширине)
-  const stepPxX = 100; // каждые 100 пикселей
+  const stepPxX = 100;
   const totalLines = Math.ceil(width.value / stepPxX);
 
   for (let i = 0; i <= totalLines; i++) {
@@ -106,7 +104,6 @@ function drawGrid(ctx) {
 
   ctx.restore();
 }
-
 
 function drawTimeAxis() {
   const ctx = timeCtx.value;
@@ -269,50 +266,54 @@ function drawHoverHighLowLine(ctx) {
 function drawChart() {
   const context = ctx.value;
   context.clearRect(0, 0, width.value, height.value);
+
   context.save();
 
   context.translate(offset.value.x, 0);
   context.scale(scale.value, 1);
-
-  drawGrid(context);
   drawLevels(context);
-  drawCandles(context);
-
+  drawCandlesBodiesOnly(context);
+  drawTimeAxis()
   context.restore();
-  drawHoverLine(ctx.value);
+
+  drawHoverDate(context);
+  drawWicksUnscaled(context);
+  drawHoverLine(context);
+  drawGrid(context);
   drawPriceScale();
-  drawHoverPriceLine(ctx.value);
-  drawHoverHighLowLine(ctx.value);
-  drawHoverDate(ctx.value);
-  drawTimeAxis();
+  drawHoverPriceLine(context);
+  drawHoverHighLowLine(context);
 }
 
-function drawCandles(ctx) {
+function drawCandlesBodiesOnly(ctx) {
   candles.value.forEach((c, i) => {
     const x = i * (candleWidth.value + spacing.value);
-    const highY = scaleYFromPrice(c.high);
-    const lowY = scaleYFromPrice(c.low);
     const openY = scaleYFromPrice(c.open);
     const closeY = scaleYFromPrice(c.close);
-
     const bodyTop = Math.min(openY, closeY);
     const bodyHeight = Math.abs(openY - closeY);
     const color = c.close >= c.open ? "#4caf50" : "#f44336";
 
-    ctx.strokeStyle = color;
     ctx.fillStyle = color;
-
-    // === Тени свечи (фиксированная ширина: 1px)
-    ctx.beginPath();
-    ctx.moveTo(x + candleWidth.value / 2, highY);
-    ctx.lineTo(x + candleWidth.value / 2, lowY);
-    ctx.stroke();
-
-    // === Тело свечи (масштабируемая ширина)
     ctx.fillRect(x, bodyTop, candleWidth.value, Math.max(1, bodyHeight));
   });
 }
 
+function drawWicksUnscaled(ctx) {
+  candles.value.forEach((c, i) => {
+    const x = i * (candleWidth.value + spacing.value) + candleWidth.value / 2;
+    const highY = scaleYFromPrice(c.high);
+    const lowY = scaleYFromPrice(c.low);
+    const color = c.close >= c.open ? "#4caf50" : "#f44336";
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x * scale.value + offset.value.x, highY);
+    ctx.lineTo(x * scale.value + offset.value.x, lowY);
+    ctx.stroke();
+  });
+}
 
 function drawLevels(ctx) {
   ctx.save();
