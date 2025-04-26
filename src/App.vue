@@ -309,7 +309,7 @@ function drawHoverHighLowLine(ctx) {
   ctx.lineTo(x * scale.value + offset.value.x, height.value);
   ctx.stroke();
 
-  //если нужно будет что то отображать возле свечи
+  // Если нужно будет что то отображать возле свечи
   // ctx.fillStyle = "#000";
   // ctx.fillRect(x * scale.value + offset.value.x + 5, y - 10, 60, 20);
   // ctx.fillStyle = "#fff";
@@ -320,7 +320,7 @@ function drawHoverHighLowLine(ctx) {
 }
 function drawVolumes(ctx) {
   const maxVolume = Math.max(...candles.value.map((c) => c.volume));
-  const volumeAreaHeight = 100; // Высота области для объёмов снизу
+  const volumeAreaHeight = 100; // Высота области для объёмов
   const volumeTop = height.value - volumeAreaHeight; // Откуда начинаем рисовать объёмы
 
   candles.value.forEach((c, i) => {
@@ -328,7 +328,7 @@ function drawVolumes(ctx) {
     const barWidth = candleWidth.value;
     const barHeight = (c.volume / maxVolume) * (volumeAreaHeight - 20);
 
-    ctx.fillStyle = "#1976d2"; // Цвет объёмов
+    ctx.fillStyle = "#1976d2";
     ctx.fillRect(
       x,
       volumeTop + (volumeAreaHeight - barHeight),
