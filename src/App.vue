@@ -116,7 +116,7 @@ const candles = ref([
   {
     time: 7,
     open: 200,
-    high: 105,
+    high: 200,
     low: 98,
     close: 104,
     date: "2024-05-01",
@@ -125,7 +125,7 @@ const candles = ref([
   {
     time: 3,
     open: 18,
-    high: 15,
+    high: 18,
     low: 17,
     close: 19,
     date: "2024-05-02",
@@ -134,7 +134,7 @@ const candles = ref([
   {
     time: 4,
     open: 55,
-    high: 15,
+    high: 55,
     low: 23,
     close: 11,
     date: "2024-05-03",
@@ -161,7 +161,7 @@ const candles = ref([
   {
     time: 7,
     open: 200,
-    high: 105,
+    high: 200,
     low: 98,
     close: 104,
     date: "2024-05-07",
@@ -170,7 +170,7 @@ const candles = ref([
   {
     time: 3,
     open: 18,
-    high: 15,
+    high: 18,
     low: 17,
     close: 19,
     date: "2024-05-02",
@@ -179,7 +179,7 @@ const candles = ref([
   {
     time: 4,
     open: 55,
-    high: 15,
+    high: 55,
     low: 23,
     close: 11,
     date: "2024-05-03",
@@ -205,10 +205,10 @@ const candles = ref([
   },
   {
     time: 7,
-    open: 200,
-    high: 105,
+    open: 150,
+    high: 550,
     low: 98,
-    close: 550,
+    close: 50,
     date: "2024-05-07",
     volume: 1000,
   },
@@ -629,10 +629,9 @@ function onMouseMove(e) {
     centerPrice.value += priceDelta;
 
     lastMouse.value = { x: e.offsetX, y: e.offsetY };
-    drawChart();
-  } else {
-    drawChart();
   }
+
+  drawChart();
 }
 onMounted(() => {
   const highs = candles.value.map((c) => c.high);
@@ -643,29 +642,20 @@ onMounted(() => {
 
   ctx.value = mainCanvas.value.getContext("2d");
   priceCtx.value = priceCanvas.value.getContext("2d");
+  timeCtx.value = timeCanvas.value.getContext("2d");
 
   const visibleCandles = 10;
-  const availableWidth = width.value / 2;
+  const totalCandleWidth = candleWidth.value + spacing.value;
+  const candlesWidthOnScreen = totalCandleWidth * visibleCandles;
 
-  let totalCandleWidth = candleWidth.value + spacing.value;
-  let neededTotalWidth = visibleCandles * totalCandleWidth;
+  const halfScreenWidth = width.value / 2;
+  scale.value = halfScreenWidth / candlesWidthOnScreen;
 
-  if (neededTotalWidth > availableWidth) {
-    const newCandleWidth = Math.floor(availableWidth / (visibleCandles * 1.5));
-    candleWidth.value = Math.max(2, newCandleWidth);
-    spacing.value = Math.max(1, Math.floor(candleWidth.value / 3));
-  }
-
-  scale.value = 2; // Базовый масштаб
-
-  const totalCandles = candles.value.length;
-  const fullWidth = totalCandles * (candleWidth.value + spacing.value);
-
-  offset.value.x = Math.min(0, width.value - fullWidth);
+  const totalCandlesWidth = totalCandleWidth * candles.value.length;
+  offset.value.x = -(totalCandlesWidth * scale.value) + width.value * 0.75;
 
   drawChart();
 });
-
 </script>
 
 <style scoped>
