@@ -59,13 +59,69 @@ const timeCtx = ref(null);
 const timeCanvasHeight = 40;
 
 const candles = ref([
-  { time: 1, open: 150, high: 110, low: 95, close: 105, date: "2024-04-25" },
-  { time: 2, open: 105, high: 112, low: 102, close: 108, date: "2024-04-26" },
-  { time: 3, open: 108, high: 115, low: 107, close: 109, date: "2024-04-27" },
-  { time: 4, open: 109, high: 200, low: 105, close: 106, date: "2024-04-28" },
-  { time: 5, open: 106, high: 109, low: 100, close: 101, date: "2024-04-29" },
-  { time: 6, open: 101, high: 103, low: 97, close: 100, date: "2024-04-30" },
-  { time: 7, open: 200, high: 105, low: 98, close: 104, date: "2024-05-01" },
+  {
+    time: 1,
+    open: 150,
+    high: 110,
+    low: 95,
+    close: 105,
+    date: "2024-04-25",
+    volume: 1000,
+  },
+  {
+    time: 2,
+    open: 105,
+    high: 112,
+    low: 102,
+    close: 108,
+    date: "2024-04-26",
+    volume: 2000,
+  },
+  {
+    time: 3,
+    open: 108,
+    high: 115,
+    low: 107,
+    close: 109,
+    date: "2024-04-27",
+    volume: 500,
+  },
+  {
+    time: 4,
+    open: 109,
+    high: 200,
+    low: 105,
+    close: 106,
+    date: "2024-04-28",
+    volume: 4000,
+  },
+  {
+    time: 5,
+    open: 106,
+    high: 109,
+    low: 100,
+    close: 101,
+    date: "2024-04-29",
+    volume: 6000,
+  },
+  {
+    time: 6,
+    open: 101,
+    high: 103,
+    low: 97,
+    close: 100,
+    date: "2024-04-30",
+    volume: 2000,
+  },
+  {
+    time: 7,
+    open: 200,
+    high: 105,
+    low: 98,
+    close: 104,
+    date: "2024-05-01",
+    volume: 1000,
+  },
 ]);
 
 function drawGrid(ctx) {
@@ -262,6 +318,25 @@ function drawHoverHighLowLine(ctx) {
 
   ctx.restore();
 }
+function drawVolumes(ctx) {
+  const maxVolume = Math.max(...candles.value.map((c) => c.volume));
+  const volumeAreaHeight = 100; // Высота области для объёмов снизу
+  const volumeTop = height.value - volumeAreaHeight; // Откуда начинаем рисовать объёмы
+
+  candles.value.forEach((c, i) => {
+    const x = i * (candleWidth.value + spacing.value);
+    const barWidth = candleWidth.value;
+    const barHeight = (c.volume / maxVolume) * (volumeAreaHeight - 20);
+
+    ctx.fillStyle = "#1976d2"; // Цвет объёмов
+    ctx.fillRect(
+      x,
+      volumeTop + (volumeAreaHeight - barHeight),
+      barWidth,
+      barHeight
+    );
+  });
+}
 
 function drawChart() {
   const context = ctx.value;
@@ -273,13 +348,15 @@ function drawChart() {
   context.scale(scale.value, 1);
   drawLevels(context);
   drawCandlesBodiesOnly(context);
-  drawTimeAxis()
+  drawTimeAxis();
+  drawVolumes(context);
+
   context.restore();
 
   drawHoverDate(context);
   drawWicksUnscaled(context);
   drawHoverLine(context);
-  drawGrid(context);
+  // drawGrid(context);
   drawPriceScale();
   drawHoverPriceLine(context);
   drawHoverHighLowLine(context);
