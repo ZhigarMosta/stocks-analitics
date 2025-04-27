@@ -1,35 +1,49 @@
 <template>
-  <div class="chart-container">
-    <canvas
-      ref="mainCanvas"
-      class="main-canvas"
-      :width="width"
-      :height="height"
-      @mousedown="startPan"
-      @mouseup="endPan"
-      @mouseleave="endPan"
-      @mousemove="onMouseMove"
-      @wheel="onMainWheel"
-    />
-
-    <canvas
-      ref="priceCanvas"
-      class="price-canvas"
-      :width="priceCanvasWidth"
-      :height="height"
-      @wheel="onPriceWheel"
-    />
+  <div class="chart">
+    <div class="chart-instruments">
+      <div class="chart-instrument">
+        <input
+          type="radio"
+          @click="onSwitchInstrumentToLevels"
+          :checked="instrimentActiv === Instruments.LVL"
+          name="instruments"
+        />
+        <p class="chart-instrument__text">LVL</p>
+      </div>
+    </div>
+    <div>
+      <div class="chart-wrapper">
+        <canvas
+          ref="mainCanvas"
+          class="chart-candles"
+          :width="width"
+          :height="height"
+          @mousedown="startPan"
+          @mouseup="endPan"
+          @mouseleave="endPan"
+          @mousemove="onMouseMove"
+          @wheel="onMainWheel"
+          @contextmenu.prevent="onAddInstrument"
+        />
+        <canvas
+          ref="priceCanvas"
+          class="chart-price"
+          :width="priceCanvasWidth"
+          :height="height"
+          @wheel="onPriceWheel"
+        />
+      </div>
+      <canvas
+        ref="timeCanvas"
+        class="chart-time"
+        :width="width"
+        :height="timeCanvasHeight"
+      />
+    </div>
   </div>
-
-  <canvas
-    ref="timeCanvas"
-    class="time-canvas"
-    :width="width"
-    :height="timeCanvasHeight"
-  />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
 
 const mainCanvas = ref(null);
@@ -37,7 +51,7 @@ const priceCanvas = ref(null);
 const ctx = ref(null);
 const priceCtx = ref(null);
 
-const width = ref(1000);
+const width = ref(500);
 const height = ref(500);
 const priceCanvasWidth = 80;
 
@@ -57,6 +71,11 @@ const priceRange = ref();
 const timeCanvas = ref(null);
 const timeCtx = ref(null);
 const timeCanvasHeight = 40;
+
+enum Instruments {
+  LVL = 1,
+}
+const instrimentActiv = ref(null);
 
 const candles = ref([
   {
@@ -201,7 +220,7 @@ const candles = ref([
     low: 97,
     close: 100,
     date: "2024-05-06",
-    volume: 2000,
+    volume: 20000,
   },
   {
     time: 7,
@@ -286,23 +305,9 @@ function drawTimeAxis() {
   ctx.moveTo(0, 0);
   ctx.lineTo(width.value, 0);
   ctx.stroke();
+  ctx.translate(100, 100);
 }
 
-function startPan(e) {
-  dragging.value = true;
-  lastMouse.value = { x: e.offsetX, y: e.offsetY };
-}
-
-function endPan() {
-  dragging.value = false;
-}
-
-function priceFromY(y) {
-  const drawableHeight = height.value - 100;
-  const visualCenter = height.value / 2 + offset.value.y;
-  const normalized = (visualCenter - y) / (drawableHeight * priceScale.value);
-  return centerPrice.value + normalized * priceRange.value;
-}
 function drawHoverDate(ctx) {
   if (!candles.value.length) return;
 
@@ -428,58 +433,23 @@ function drawVolumes(ctx) {
   });
 }
 
-function drawChart() {
-  const context = ctx.value;
-  context.clearRect(0, 0, width.value, height.value);
-
-  context.save();
-
-  context.translate(offset.value.x, 0);
-  context.scale(scale.value, 1);
-  drawLevels(context);
-  drawCandlesBodiesOnly(context);
-  drawTimeAxis();
-  drawVolumes(context);
-
-  context.restore();
-
-  drawHoverDate(context);
-  drawWicksUnscaled(context);
-  drawHoverLine(context);
-  // drawGrid(context);
-  drawPriceScale();
-  drawHoverPriceLine(context);
-  drawHoverHighLowLine(context);
+function onAddInstrument(e) {
+  if (instrimentActiv.value === Instruments.LVL) {
+    addLevls(e);
+  }
 }
 
-function drawCandlesBodiesOnly(ctx) {
-  candles.value.forEach((c, i) => {
-    const x = i * (candleWidth.value + spacing.value);
-    const openY = scaleYFromPrice(c.open);
-    const closeY = scaleYFromPrice(c.close);
-    const bodyTop = Math.min(openY, closeY);
-    const bodyHeight = Math.abs(openY - closeY);
-    const color = c.close >= c.open ? "#4caf50" : "#f44336";
-
-    ctx.fillStyle = color;
-    ctx.fillRect(x, bodyTop, candleWidth.value, Math.max(1, bodyHeight));
-  });
+function onSwitchInstrumentToLevels() {
+  instrimentActiv.value === Instruments.LVL
+    ? (instrimentActiv.value = null)
+    : (instrimentActiv.value = Instruments.LVL);
 }
 
-function drawWicksUnscaled(ctx) {
-  candles.value.forEach((c, i) => {
-    const x = i * (candleWidth.value + spacing.value) + candleWidth.value / 2;
-    const highY = scaleYFromPrice(c.high);
-    const lowY = scaleYFromPrice(c.low);
-    const color = c.close >= c.open ? "#4caf50" : "#f44336";
+function addLevls(e) {
+  e.preventDefault();
+  levels.value.push(priceFromY(e.offsetY));
 
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x * scale.value + offset.value.x, highY);
-    ctx.lineTo(x * scale.value + offset.value.x, lowY);
-    ctx.stroke();
-  });
+  drawChart();
 }
 
 function drawLevels(ctx) {
@@ -502,20 +472,42 @@ function drawLevels(ctx) {
   ctx.restore();
 }
 
-function getNicePriceStep(range, lines) {
-  const roughStep = range / lines;
-  const exponent = Math.floor(Math.log10(roughStep));
-  const fraction = roughStep / Math.pow(10, exponent);
+function drawCandlesBodiesOnly(ctx) {
+  candles.value.forEach((c, i) => {
+    const x = i * (candleWidth.value + spacing.value);
+    const openY = scaleYFromPrice(c.open);
+    const closeY = scaleYFromPrice(c.close);
+    const bodyTop = Math.min(openY, closeY);
+    const bodyHeight = Math.abs(openY - closeY);
+    const color = c.close >= c.open ? "#4caf50" : "#f44336";
 
-  let niceFraction;
-  if (fraction < 1.5) niceFraction = 1;
-  else if (fraction < 3) niceFraction = 2;
-  else if (fraction < 7) niceFraction = 5;
-  else niceFraction = 10;
-
-  return niceFraction * Math.pow(10, exponent);
+    ctx.fillStyle = color;
+    ctx.fillRect(x, bodyTop, candleWidth.value, Math.max(1, bodyHeight));
+  });
 }
 
+function priceFromY(y) {
+  const drawableHeight = height.value - 100;
+  const visualCenter = height.value / 2 + offset.value.y;
+  const normalized = (visualCenter - y) / (drawableHeight * priceScale.value);
+  return centerPrice.value + normalized * priceRange.value;
+}
+
+function drawWicksUnscaled(ctx) {
+  candles.value.forEach((c, i) => {
+    const x = i * (candleWidth.value + spacing.value) + candleWidth.value / 2;
+    const highY = scaleYFromPrice(c.high);
+    const lowY = scaleYFromPrice(c.low);
+    const color = c.close >= c.open ? "#4caf50" : "#f44336";
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x * scale.value + offset.value.x, highY);
+    ctx.lineTo(x * scale.value + offset.value.x, lowY);
+    ctx.stroke();
+  });
+}
 function drawPriceScale() {
   const context = priceCtx.value;
   context.clearRect(0, 0, priceCanvasWidth, height.value);
@@ -567,6 +559,20 @@ function drawPriceScale() {
   );
 }
 
+function getNicePriceStep(range, lines) {
+  const roughStep = range / lines;
+  const exponent = Math.floor(Math.log10(roughStep));
+  const fraction = roughStep / Math.pow(10, exponent);
+
+  let niceFraction;
+  if (fraction < 1.5) niceFraction = 1;
+  else if (fraction < 3) niceFraction = 2;
+  else if (fraction < 7) niceFraction = 5;
+  else niceFraction = 10;
+
+  return niceFraction * Math.pow(10, exponent);
+}
+
 function drawHoverLine(ctx) {
   ctx.strokeStyle = "#cccccc";
   ctx.beginPath();
@@ -578,6 +584,30 @@ function drawHoverLine(ctx) {
   ctx.fillStyle = "#000";
   ctx.font = "12px sans-serif";
   ctx.fillText(price.toFixed(2), 5, mouse.value.y - 5);
+}
+
+function drawChart() {
+  const context = ctx.value;
+  context.clearRect(0, 0, width.value, height.value);
+
+  context.save();
+
+  context.translate(offset.value.x, 0);
+  context.scale(scale.value, 1);
+  drawLevels(context);
+  drawCandlesBodiesOnly(context);
+  drawTimeAxis();
+  drawVolumes(context);
+
+  context.restore();
+
+  drawHoverDate(context);
+  drawWicksUnscaled(context);
+  drawHoverLine(context);
+  // drawGrid(context);
+  drawPriceScale();
+  drawHoverPriceLine(context);
+  drawHoverHighLowLine(context);
 }
 
 function onMainWheel(e) {
@@ -613,6 +643,15 @@ function onPriceWheel(e) {
   centerPrice.value += priceBefore - priceAfter;
 
   drawChart();
+}
+
+function startPan(e) {
+  dragging.value = true;
+  lastMouse.value = { x: e.offsetX, y: e.offsetY };
+}
+
+function endPan() {
+  dragging.value = false;
 }
 
 function onMouseMove(e) {
@@ -659,25 +698,41 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.chart-container {
+.chart-wrapper {
   display: flex;
   background: #fff;
   overflow: hidden;
 }
 
-.main-canvas {
+.chart-candles {
   display: block;
   background: #ffffff;
   cursor: grab;
 }
 
-.price-canvas {
+.chart-price {
   display: block;
   background: #f0f0f0;
 }
 
-.time-canvas {
+.chart-time {
   display: block;
   background: #f9f9f9;
+}
+.chart-instruments {
+  border: 1px solid red;
+  width: 50px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.chart {
+  display: flex;
+}
+.chart-instrument {
+  display: flex;
+  gap: 5px;
+  align-items: center;
 }
 </style>
