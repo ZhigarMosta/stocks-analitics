@@ -31,6 +31,10 @@
           :width="priceCanvasWidth"
           :height="height"
           @wheel="onPriceWheel"
+          @mousedown="startPriceScaleDrag"
+          @mousemove="onPriceScaleDrag"
+          @mouseup="endPriceScaleDrag"
+          @mouseleave="endPriceScaleDrag"
         />
       </div>
       <canvas
@@ -71,6 +75,7 @@ const priceRange = ref();
 const timeCanvas = ref(null);
 const timeCtx = ref(null);
 const timeCanvasHeight = 40;
+const scalingPriceByDrag = ref(false); // для графика цен
 
 enum Instruments {
   LVL = 1,
@@ -225,7 +230,7 @@ const candles = ref([
   {
     time: 7,
     open: 150,
-    high: 550,
+    high: 200,
     low: 98,
     close: 50,
     date: "2024-05-07",
@@ -672,6 +677,34 @@ function onMouseMove(e) {
 
   drawChart();
 }
+
+function startPriceScaleDrag(e) {
+  scalingPriceByDrag.value = true;
+  lastMouse.value = { x: e.offsetX, y: e.offsetY };
+}
+
+function onPriceScaleDrag(e) {
+  if (!scalingPriceByDrag.value) return;
+
+  const dy = e.offsetY - lastMouse.value.y;
+
+  const zoomFactor = 1.018; // Чувствительность
+  const delta = dy < 0 ? zoomFactor : 1 / zoomFactor;
+
+  const priceBefore = priceFromY(lastMouse.value.y);
+  priceScale.value = Math.max(0.01, Math.min(100, priceScale.value * delta));
+  const priceAfter = priceFromY(lastMouse.value.y);
+
+  centerPrice.value += priceBefore - priceAfter;
+
+  lastMouse.value = { x: e.offsetX, y: e.offsetY };
+  drawChart();
+}
+
+function endPriceScaleDrag() {
+  scalingPriceByDrag.value = false;
+}
+
 onMounted(() => {
   const highs = candles.value.map((c) => c.high);
   const lows = candles.value.map((c) => c.low);
@@ -713,6 +746,7 @@ onMounted(() => {
 .chart-price {
   display: block;
   background: #f0f0f0;
+  cursor: pointer;
 }
 
 .chart-time {
