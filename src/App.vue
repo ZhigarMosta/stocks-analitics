@@ -642,9 +642,12 @@ function onPriceWheel(e) {
   const zoomFactor = 1.1;
   const delta = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
 
-  const priceBefore = priceFromY(e.offsetY);
+  const centerY = height.value / 2;
+  const priceBefore = priceFromY(centerY);
+
   priceScale.value = Math.min(100, Math.max(0.01, priceScale.value * delta));
-  const priceAfter = priceFromY(e.offsetY);
+
+  const priceAfter = priceFromY(centerY);
   centerPrice.value += priceBefore - priceAfter;
 
   drawChart();
@@ -688,16 +691,18 @@ function onPriceScaleDrag(e) {
 
   const dy = e.offsetY - lastMouse.value.y;
 
-  const zoomFactor = 1.018; // Чувствительность
-  const delta = dy < 0 ? zoomFactor : 1 / zoomFactor;
+  const zoomFactor = 1.038; // чувствительность
+  const delta = dy > 0 ? 1 / zoomFactor : zoomFactor;
 
-  const priceBefore = priceFromY(lastMouse.value.y);
+  const centerY = height.value / 2;
+
+  const priceBefore = priceFromY(centerY);
   priceScale.value = Math.max(0.01, Math.min(100, priceScale.value * delta));
-  const priceAfter = priceFromY(lastMouse.value.y);
+  const priceAfter = priceFromY(centerY);
 
   centerPrice.value += priceBefore - priceAfter;
-
   lastMouse.value = { x: e.offsetX, y: e.offsetY };
+
   drawChart();
 }
 
