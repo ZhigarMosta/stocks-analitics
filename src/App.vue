@@ -39,7 +39,7 @@
       </div>
       <canvas
         ref="timeCanvas"
-        class="chart-time"
+        class="time-canvas"
         :width="width"
         :height="timeCanvasHeight"
       />
@@ -310,7 +310,6 @@ function drawTimeAxis() {
   ctx.moveTo(0, 0);
   ctx.lineTo(width.value, 0);
   ctx.stroke();
-  ctx.translate(100, 100);
 }
 
 function drawHoverDate(ctx) {
@@ -601,7 +600,6 @@ function drawChart() {
   context.scale(scale.value, 1);
   drawLevels(context);
   drawCandlesBodiesOnly(context);
-  drawTimeAxis();
   drawVolumes(context);
 
   context.restore();
@@ -613,6 +611,7 @@ function drawChart() {
   drawPriceScale();
   drawHoverPriceLine(context);
   drawHoverHighLowLine(context);
+  drawTimeAxis();
 }
 
 function onMainWheel(e) {
@@ -621,17 +620,33 @@ function onMainWheel(e) {
   const delta = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
 
   if (e.ctrlKey) {
+    // CTRL: Масштабируем по курсору
     const worldXBeforeZoom = (e.offsetX - offset.value.x) / scale.value;
-
     scale.value = Math.max(0.1, Math.min(20, scale.value * delta));
-
     const worldXAfterZoom = (e.offsetX - offset.value.x) / scale.value;
-
     const dx = (worldXAfterZoom - worldXBeforeZoom) * scale.value;
     offset.value.x += dx;
   } else {
+    // Без CTRL: Меняем размер свечей относительно правого края экрана
+
+    const pivotX = width.value; // правая граница
+    const worldPivotBefore = (pivotX - offset.value.x) / scale.value;
+
+    // Масштабируем свечи
+    const oldTotalWidth = candleWidth.value + spacing.value;
     candleWidth.value = Math.max(2, candleWidth.value * delta);
     spacing.value = Math.max(1, spacing.value * delta);
+    const newTotalWidth = candleWidth.value + spacing.value;
+
+    // Корректируем offset так, чтобы pivot оставался на месте
+    const worldPivotAfter = (pivotX - offset.value.x) / scale.value;
+    const deltaWorldPivot = worldPivotAfter - worldPivotBefore;
+    offset.value.x += deltaWorldPivot * scale.value;
+
+    // Ограничение, чтобы график не улетал слишком влево
+    const totalGraphWidth = candles.value.length * newTotalWidth * scale.value;
+    const minOffsetX = Math.min(width.value - totalGraphWidth, 0);
+    offset.value.x = Math.max(minOffsetX, offset.value.x);
   }
 
   drawChart();
@@ -754,10 +769,6 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.chart-time {
-  display: block;
-  background: #f9f9f9;
-}
 .chart-instruments {
   border: 1px solid red;
   width: 50px;
@@ -773,5 +784,10 @@ onMounted(() => {
   display: flex;
   gap: 5px;
   align-items: center;
+}
+.time-canvas {
+  display: block;
+  background: #f9f9f9;
+  border-top: 1px solid #ccc;
 }
 </style>
