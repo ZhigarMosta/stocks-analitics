@@ -75,7 +75,7 @@ const priceRange = ref();
 const timeCanvas = ref(null);
 const timeCtx = ref(null);
 const timeCanvasHeight = 40;
-const scalingPriceByDrag = ref(false); // для графика цен
+const scalingPriceByDrag = ref(false);
 
 enum Instruments {
   LVL = 1,
@@ -419,8 +419,8 @@ function drawHoverHighLowLine(ctx) {
 }
 function drawVolumes(ctx) {
   const maxVolume = Math.max(...candles.value.map((c) => c.volume));
-  const volumeAreaHeight = 100; // Высота области для объёмов
-  const volumeTop = height.value - volumeAreaHeight; // Откуда начинаем рисовать объёмы
+  const volumeAreaHeight = 100;
+  const volumeTop = height.value - volumeAreaHeight;
 
   candles.value.forEach((c, i) => {
     const x = i * (candleWidth.value + spacing.value);
@@ -620,34 +620,29 @@ function onMainWheel(e) {
   const delta = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
 
   if (e.ctrlKey) {
-    // CTRL: Масштабируем по курсору
     const worldXBeforeZoom = (e.offsetX - offset.value.x) / scale.value;
     scale.value = Math.max(0.1, Math.min(20, scale.value * delta));
     const worldXAfterZoom = (e.offsetX - offset.value.x) / scale.value;
     const dx = (worldXAfterZoom - worldXBeforeZoom) * scale.value;
     offset.value.x += dx;
   } else {
-    // Без CTRL: Меняем размер свечей относительно правого края экрана
-
-    const pivotX = width.value; // правая граница
+    const pivotX = width.value;
     const worldPivotBefore = (pivotX - offset.value.x) / scale.value;
 
-    // Масштабируем свечи
-    const oldTotalWidth = candleWidth.value + spacing.value;
     candleWidth.value = Math.max(2, candleWidth.value * delta);
     spacing.value = Math.max(1, spacing.value * delta);
     const newTotalWidth = candleWidth.value + spacing.value;
 
-    // Корректируем offset так, чтобы pivot оставался на месте
     const worldPivotAfter = (pivotX - offset.value.x) / scale.value;
     const deltaWorldPivot = worldPivotAfter - worldPivotBefore;
     offset.value.x += deltaWorldPivot * scale.value;
 
-    // Ограничение, чтобы график не улетал слишком влево
     const totalGraphWidth = candles.value.length * newTotalWidth * scale.value;
     const minOffsetX = Math.min(width.value - totalGraphWidth, 0);
     offset.value.x = Math.max(minOffsetX, offset.value.x);
   }
+
+  clampHorizontalOffset();
 
   drawChart();
 }
@@ -691,6 +686,8 @@ function onMouseMove(e) {
     centerPrice.value += priceDelta;
 
     lastMouse.value = { x: e.offsetX, y: e.offsetY };
+
+    clampHorizontalOffset();
   }
 
   drawChart();
@@ -748,6 +745,21 @@ onMounted(() => {
 
   drawChart();
 });
+
+function clampHorizontalOffset() {
+  const totalCandleWidth = candleWidth.value + spacing.value;
+  const totalWidth = totalCandleWidth * candles.value.length * scale.value;
+
+  const minOffsetX = -(totalWidth - candleWidth.value * scale.value);
+  const maxOffsetX = candleWidth.value * scale.value;
+
+  if (offset.value.x < minOffsetX) {
+    offset.value.x = minOffsetX;
+  }
+  if (offset.value.x > maxOffsetX) {
+    offset.value.x = maxOffsetX;
+  }
+}
 </script>
 
 <style scoped>
