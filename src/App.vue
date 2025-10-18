@@ -1,11 +1,10 @@
 <template>
   <div class="chart-wrapper-with-resizers" :style="containerStyle">
-    <div class="chart" 
-      :height="height">
+    <div class="chart" :height="height">
       <div
         class="chart-drag-layer"
         ref="chartContainer"
-        :style="{ width: (width + widthInstrumentsAndPrice) + 'px' }"
+        :style="{ width: width + widthInstrumentsAndPrice + 'px' }"
         @mousedown="startContainerDrag"
       ></div>
       <div class="chart-instruments">
@@ -53,17 +52,46 @@
         />
       </div>
     </div>
-    
+
     <!-- Ресайзеры вокруг всего .chart -->
-    <div class="resizer resizer-top" @mousedown="startResize('top', $event)"></div>
-    <div class="resizer resizer-right" :style="{ right: (-width - widthInstrumentsAndPrice - 8) + 'px' }" @mousedown="startResize('right', $event)"></div>
-    <div class="resizer resizer-bottom" :style="{ right: (-width - widthInstrumentsAndPrice - 8) + 'px' }" @mousedown="startResize('bottom', $event)"></div>
-    <div class="resizer resizer-left" @mousedown="startResize('left', $event)"></div>
+    <div
+      class="resizer resizer-top"
+      :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
+      @mousedown="startResize('top', $event)"
+    ></div>
+    <div
+      class="resizer resizer-right"
+      :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
+      @mousedown="startResize('right', $event)"
+    ></div>
+    <div
+      class="resizer resizer-bottom"
+      :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
+      @mousedown="startResize('bottom', $event)"
+    ></div>
+    <div
+      class="resizer resizer-left"
+      @mousedown="startResize('left', $event)"
+    ></div>
     <!-- Угловые ресайзеры -->
-    <div class="resizer resizer-top-left" @mousedown="startResize('top-left', $event)"></div>
-    <div class="resizer resizer-top-right" :style="{ right: (-width - widthInstrumentsAndPrice - 8) + 'px' }" @mousedown="startResize('top-right', $event)"></div> 
-    <div class="resizer resizer-bottom-left" @mousedown="startResize('bottom-left', $event)"></div>
-    <div class="resizer resizer-bottom-right" :style="{ right: (-width - widthInstrumentsAndPrice - 8) + 'px' }" @mousedown="startResize('bottom-right', $event)"></div>
+    <div
+      class="resizer resizer-top-left"
+      @mousedown="startResize('top-left', $event)"
+    ></div>
+    <div
+      class="resizer resizer-top-right"
+      :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
+      @mousedown="startResize('top-right', $event)"
+    ></div>
+    <div
+      class="resizer resizer-bottom-left"
+      @mousedown="startResize('bottom-left', $event)"
+    ></div>
+    <div
+      class="resizer resizer-bottom-right"
+      :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
+      @mousedown="startResize('bottom-right', $event)"
+    ></div>
   </div>
 </template>
 <script setup lang="ts">
@@ -77,7 +105,7 @@ const dragStart = ref({ x: 0, y: 0 });
 const widthInstrumentsAndPrice = 160;
 // ресайз
 const isResizing = ref(false);
-const resizeDirection = ref('');
+const resizeDirection = ref("");
 const resizeStart = ref({ x: 0, y: 0 });
 const startSize = ref({ width: 0, height: 0 });
 
@@ -279,68 +307,81 @@ const containerStyle = computed(() => ({
 function startResize(direction, e) {
   e.preventDefault();
   e.stopPropagation();
-  
+
   isResizing.value = true;
   resizeDirection.value = direction;
   resizeStart.value = { x: e.clientX, y: e.clientY };
   startSize.value = { width: width.value, height: height.value };
-  
+
   document.addEventListener("mousemove", onResizeMove);
   document.addEventListener("mouseup", stopResize);
+  drawChart();
 }
 function onResizeMove(e) {
   if (!isResizing.value) return;
-  
+
   const dx = e.clientX - resizeStart.value.x;
   const dy = e.clientY - resizeStart.value.y;
-  
+
   let newWidth = startSize.value.width;
   let newHeight = startSize.value.height;
   let newX = containerPosition.value.x;
   let newY = containerPosition.value.y;
-  
+
   switch (resizeDirection.value) {
-    case 'top':
+    case "top":
       newHeight = Math.max(200, startSize.value.height - dy);
-      newY = containerPosition.value.y + dy;
+      if (height.value > 200) {
+        newY = e.clientY;
+      }
       break;
-    case 'right':
+    case "right":
       newWidth = Math.max(300, startSize.value.width + dx);
       break;
-    case 'bottom':
+    case "bottom":
       newHeight = Math.max(200, startSize.value.height + dy);
       break;
-    case 'left':
+    case "left":
       newWidth = Math.max(300, startSize.value.width - dx);
-      newX = containerPosition.value.x + dx;
+      if (width.value > 300) {
+        newX = e.clientX;
+      }
       break;
-    case 'top-left':
+    case "top-left":
       newWidth = Math.max(300, startSize.value.width - dx);
       newHeight = Math.max(200, startSize.value.height - dy);
-      newX = containerPosition.value.x + dx;
-      newY = containerPosition.value.y + dy;
+      if (width.value > 300) {
+        newX = e.clientX;
+      }
+      if (height.value > 200) {
+        newY = e.clientY;
+      }
       break;
-    case 'top-right':
+    case "top-right":
       newWidth = Math.max(300, startSize.value.width + dx);
       newHeight = Math.max(200, startSize.value.height - dy);
-      newY = containerPosition.value.y + dy;
+      if (height.value != 200) {
+        newY = e.clientY;
+      }
       break;
-    case 'bottom-left':
+    case "bottom-left":
       newWidth = Math.max(300, startSize.value.width - dx);
       newHeight = Math.max(200, startSize.value.height + dy);
-      newX = containerPosition.value.x + dx;
+      if (width.value > 300) {
+        newX = e.clientX;
+      }
       break;
-    case 'bottom-right':
+    case "bottom-right":
       newWidth = Math.max(300, startSize.value.width + dx);
       newHeight = Math.max(200, startSize.value.height + dy);
       break;
   }
-  
+
   width.value = newWidth;
   height.value = newHeight;
   containerPosition.value.x = newX;
   containerPosition.value.y = newY;
-  
+
   drawChart();
 }
 
@@ -348,6 +389,7 @@ function stopResize() {
   isResizing.value = false;
   document.removeEventListener("mousemove", onResizeMove);
   document.removeEventListener("mouseup", stopResize);
+  drawChart();
 }
 
 // Функции для перемещения контейнера
@@ -1091,7 +1133,6 @@ function isPointNearLine(px, py, x1, y1, x2, y2, threshold) {
 }
 
 .resizer-right {
-  right: -6px;
   top: 8px;
   bottom: 8px;
   width: 12px;
@@ -1101,7 +1142,6 @@ function isPointNearLine(px, py, x1, y1, x2, y2, threshold) {
 .resizer-bottom {
   bottom: -6px;
   left: 8px;
-  right: 8px;
   height: 12px;
   cursor: s-resize;
 }
