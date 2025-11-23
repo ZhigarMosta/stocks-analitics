@@ -1,4 +1,4 @@
-import { createPinia, defineStore, storeToRefs } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
 import { useChartCandelStore } from "./candel";
 import { useChartMainStore } from "./main";
 import { useChartPriceStore } from "./price";

@@ -1,5 +1,5 @@
-import { createPinia, defineStore, storeToRefs } from "pinia";
-import { Ref, ref } from "vue";
+import { defineStore, storeToRefs } from "pinia";
+import { ref } from "vue";
 import { useDragStore } from "./drag";
 import { useChartMainStore } from "./main";
 

@@ -1,4 +1,4 @@
-import { createPinia, defineStore, storeToRefs } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useChartMainStore } from "./main";
 import { useChartCandelStore } from "./candel";

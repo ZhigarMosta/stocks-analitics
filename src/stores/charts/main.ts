@@ -174,12 +174,6 @@ export const useChartMainStore = defineStore("chartMain", () => {
     dragging.value = false;
   }
 
-  function endPriceScaleDrag() {
-    const storeDrag = useDragStore();
-    const { scalingPriceByDrag } = storeToRefs(storeDrag);
-    scalingPriceByDrag.value = false;
-  }
-
   return {
     width,
     height,
