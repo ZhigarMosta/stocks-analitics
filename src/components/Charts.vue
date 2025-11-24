@@ -19,7 +19,15 @@
         </div>
       </div>
 
-      <Chart />
+      <div>
+          <Chart v-if="timeCtx" :timeCtx="timeCtx" />
+        <canvas
+          ref="timeCanvas"
+          class="time-canvas"
+          :width="width"
+          :height="TIME_CANVAS_HEIGHT"
+        />
+      </div>
     </div>
 
     <div
@@ -64,13 +72,14 @@
 </template>
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { ref, computed } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useDragStore } from "@/stores/charts/drag";
 import { useChartMainStore } from "@/stores/charts/main";
 import { useResizeStore } from "@/stores/charts/resize";
 import { useLevelStore } from "@/stores/instruments/level";
 import { Instruments, useInstrumentStore } from "@/stores/instruments/main";
 import Chart from "./Chart.vue";
+import { TIME_CANVAS_HEIGHT, useChartTimeStore } from "@/stores/charts/time";
 
 const storeChartMain = useChartMainStore();
 const { width, height } = storeToRefs(storeChartMain);
@@ -85,10 +94,21 @@ const levelStore = useLevelStore();
 const { onSwitchInstrumentToLevels } = levelStore;
 const instrumentStore = useInstrumentStore();
 const { instrimentActiv } = storeToRefs(instrumentStore);
-
+const timeCanvas = ref(null);
+const timeCtx = ref(null);
 const containerStyle = computed(() => ({
   transform: `translate(${containerPosition.value.x}px, ${containerPosition.value.y}px)`,
 }));
+
+watch([width, height], () => {
+  if (timeCanvas.value) {
+    timeCanvas.value.width = width.value;
+  }
+});
+
+onMounted(() => {
+  timeCtx.value = timeCanvas.value.getContext("2d");
+});
 </script>
 
 <style scoped>

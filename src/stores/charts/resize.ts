@@ -12,7 +12,6 @@ export const useResizeStore = defineStore("resize", () => {
   function startResize(direction, e) {
     const mainStore = useChartMainStore();
     const { width, height } = storeToRefs(mainStore);
-    const { drawChart } = mainStore;
 
     e.preventDefault();
     e.stopPropagation();
@@ -24,7 +23,6 @@ export const useResizeStore = defineStore("resize", () => {
 
     document.addEventListener("mousemove", onResizeMove);
     document.addEventListener("mouseup", stopResize);
-    drawChart();
   }
 
   function onResizeMove(e) {
@@ -32,7 +30,6 @@ export const useResizeStore = defineStore("resize", () => {
     const { containerPosition } = storeToRefs(storeDrag);
     const mainStore = useChartMainStore();
     const { width, height } = storeToRefs(mainStore);
-    const { drawChart } = mainStore;
 
     if (!isResizing.value) return;
 
@@ -98,7 +95,6 @@ export const useResizeStore = defineStore("resize", () => {
     containerPosition.value.x = newX;
     containerPosition.value.y = newY;
 
-    drawChart();
   }
 
   function stopResize() {
@@ -109,7 +105,7 @@ export const useResizeStore = defineStore("resize", () => {
     document.removeEventListener("mousemove", onResizeMove);
     document.removeEventListener("mouseup", stopResize);
 
-    drawChart();
+    // drawChart();
   }
 
   return {

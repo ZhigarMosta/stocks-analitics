@@ -7,18 +7,17 @@ import { useChartPriceStore } from "./price";
 export const TIME_CANVAS_HEIGHT = 40;
 
 export const useChartTimeStore = defineStore("chartTime", () => {
-  const timeCanvas = ref(null);
-  const timeCtx = ref(null);
-
   function drawTimeAxis(
     width: Ref,
     candleWidth: Ref,
     spacing: Ref,
     offset: Ref,
     scale: Ref,
-    candles: Ref
+    candles: Ref,
+    timeCtx
   ) {
-    const ctx = timeCtx.value;
+    const ctx = timeCtx;
+
     if (!ctx) return;
 
     ctx.clearRect(0, 0, width.value, TIME_CANVAS_HEIGHT);
@@ -130,8 +129,6 @@ export const useChartTimeStore = defineStore("chartTime", () => {
   }
 
   return {
-    timeCanvas,
-    timeCtx,
     drawTimeAxis,
     drawHoverDate,
     drawHoverHighLowLine,
