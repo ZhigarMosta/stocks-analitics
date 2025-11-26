@@ -144,7 +144,7 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     );
   }
 
-  function onPriceWheel(e, timeCtx, priceCtx) {
+  function onPriceWheel(e, timeCtx, priceCtx, mainCtx) {
     const mainChart = useChartMainStore();
     const { height } = storeToRefs(mainChart);
     const { drawChart } = mainChart;
@@ -161,10 +161,10 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     const priceAfter = priceFromY(centerY);
     centerPrice.value += priceBefore - priceAfter;
 
-    drawChart(timeCtx, priceCtx);
+    drawChart(timeCtx, priceCtx, mainCtx);
   }
 
-  function onPriceScaleDrag(e, timeCtx, priceCtx) {
+  function onPriceScaleDrag(e, timeCtx, priceCtx, mainCtx) {
     const drag = useDragStore();
     const { scalingPriceByDrag } = storeToRefs(drag);
     const mainChart = useChartMainStore();
@@ -187,7 +187,7 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     centerPrice.value += priceBefore - priceAfter;
     lastMouse.value = { x: e.offsetX, y: e.offsetY };
 
-    drawChart(timeCtx, priceCtx);
+    drawChart(timeCtx, priceCtx, mainCtx);
   }
 
   function drawHoverPriceLine(ctx) {

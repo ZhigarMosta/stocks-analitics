@@ -7,7 +7,7 @@ import { Instruments, useInstrumentStore } from "./main";
 export const useLevelStore = defineStore("level", () => {
   const levels = ref([100, 107, 110]);
 
-  function addLevls(e, timeCtx, priceCtx) {
+  function addLevls(e, timeCtx, priceCtx, mainCtx) {
     const priceStore = useChartPriceStore();
     const { priceFromY } = priceStore;
     const mainStore = useChartMainStore();
@@ -16,7 +16,7 @@ export const useLevelStore = defineStore("level", () => {
     e.preventDefault();
     levels.value.push(priceFromY(e.offsetY));
 
-    drawChart(timeCtx, priceCtx);
+    drawChart(timeCtx, priceCtx, mainCtx);
   }
 
   function drawLevels(ctx) {
