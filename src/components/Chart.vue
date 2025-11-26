@@ -10,8 +10,8 @@
           @mousedown="startPan"
           @mouseup="endPan"
           @mouseleave="endPan"
-          @mousemove="onMouseMove($event, timeCtx)"
-          @wheel="onMainWheel($event, timeCtx)"
+          @mousemove="(e) => onMouseMove(e ,timeCtx)"
+          @wheel="(e) => onMainWheel(e, timeCtx)"
           @contextmenu.prevent="onCanvasContextMenu"
         />
         <canvas
@@ -19,9 +19,9 @@
           class="chart-price"
           :width="PRICE_CANVAS_WIDTH"
           :height="height"
-          @wheel="onPriceWheel($event, timeCtx)"
+          @wheel="(e) => onPriceWheel(e, timeCtx)"
           @mousedown="startPriceScaleDrag"
-          @mousemove="onPriceScaleDrag($event, timeCtx)"
+          @mousemove="(e) => onPriceScaleDrag(e, timeCtx)"
           @mouseup="endPriceScaleDrag"
           @mouseleave="endPriceScaleDrag"
         />
@@ -34,12 +34,11 @@
 import { useChartCandelStore } from "@/stores/charts/candel";
 import { useDragStore } from "@/stores/charts/drag";
 import { useChartEmaStore } from "@/stores/charts/ema";
-import { TIME_CANVAS_HEIGHT, useChartMainStore } from "@/stores/charts/main";
+import { useChartMainStore } from "@/stores/charts/main";
 import { PRICE_CANVAS_WIDTH, useChartPriceStore } from "@/stores/charts/price";
-import { useChartTimeStore } from "@/stores/charts/time";
 import { useInstrumentStore } from "@/stores/instruments/main";
 import { storeToRefs } from "pinia";
-import { computed, onMounted, Ref, ref, watch } from "vue";
+import { onMounted, Ref, watch } from "vue";
 
 const props = defineProps<{
   timeCtx: Ref;
@@ -51,10 +50,9 @@ const { width, height, spacing, offset, scale, ctx, mainCanvas } =
 const { drawChart, onMainWheel, onMouseMove, startPan, endPan } =
   storeChartMain;
 const storeDrag = useDragStore();
-const { containerPosition } = storeToRefs(storeDrag);
 const { startPriceScaleDrag } = storeDrag;
 const priceChart = useChartPriceStore();
-const { priceScale, centerPrice, priceRange, priceCanvas, priceCtx } =
+const { centerPrice, priceRange, priceCanvas, priceCtx } =
   storeToRefs(priceChart);
 const { onPriceWheel, onPriceScaleDrag, endPriceScaleDrag } = priceChart;
 const candelChart = useChartCandelStore();
@@ -78,7 +76,7 @@ function onCanvasContextMenu(e) {
   onAddInstrument(e);
 }
 
-watch([scale, priceScale, offset], drawChart);
+// watch([scale, offset], drawChart);
 watch([width, height], () => {
   if (mainCanvas.value) mainCanvas.value.width = width.value;
   if (mainCanvas.value) mainCanvas.value.height = height.value;

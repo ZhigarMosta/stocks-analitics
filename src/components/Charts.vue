@@ -80,6 +80,7 @@ import { useLevelStore } from "@/stores/instruments/level";
 import { Instruments, useInstrumentStore } from "@/stores/instruments/main";
 import Chart from "./Chart.vue";
 import { TIME_CANVAS_HEIGHT, useChartTimeStore } from "@/stores/charts/time";
+import { useUserStore } from "@/stores/user/user";
 
 const storeChartMain = useChartMainStore();
 const { width, height } = storeToRefs(storeChartMain);
@@ -94,6 +95,9 @@ const levelStore = useLevelStore();
 const { onSwitchInstrumentToLevels } = levelStore;
 const instrumentStore = useInstrumentStore();
 const { instrimentActiv } = storeToRefs(instrumentStore);
+const userStore = useUserStore();
+const { settings } = storeToRefs(userStore);
+// const timeCanvas = settings.value[0].refTime;
 const timeCanvas = ref(null);
 const timeCtx = ref(null);
 const containerStyle = computed(() => ({
