@@ -95,9 +95,6 @@ const levelStore = useLevelStore();
 const { onSwitchInstrumentToLevels } = levelStore;
 const instrumentStore = useInstrumentStore();
 const { instrimentActiv } = storeToRefs(instrumentStore);
-const userStore = useUserStore();
-const { settings } = storeToRefs(userStore);
-// const timeCanvas = settings.value[0].refTime;
 const timeCanvas = ref(null);
 const timeCtx = ref(null);
 const containerStyle = computed(() => ({

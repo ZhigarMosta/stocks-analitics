@@ -10,8 +10,8 @@
           @mousedown="startPan"
           @mouseup="endPan"
           @mouseleave="endPan"
-          @mousemove="(e) => onMouseMove(e ,timeCtx)"
-          @wheel="(e) => onMainWheel(e, timeCtx)"
+          @mousemove="(e) => onMouseMove(e, timeCtx, priceCtx)"
+          @wheel="(e) => onMainWheel(e, timeCtx, priceCtx)"
           @contextmenu.prevent="onCanvasContextMenu"
         />
         <canvas
@@ -19,9 +19,9 @@
           class="chart-price"
           :width="PRICE_CANVAS_WIDTH"
           :height="height"
-          @wheel="(e) => onPriceWheel(e, timeCtx)"
+          @wheel="(e) => onPriceWheel(e, timeCtx, priceCtx)"
           @mousedown="startPriceScaleDrag"
-          @mousemove="(e) => onPriceScaleDrag(e, timeCtx)"
+          @mousemove="(e) => onPriceScaleDrag(e, timeCtx, priceCtx)"
           @mouseup="endPriceScaleDrag"
           @mouseleave="endPriceScaleDrag"
         />
@@ -38,7 +38,7 @@ import { useChartMainStore } from "@/stores/charts/main";
 import { PRICE_CANVAS_WIDTH, useChartPriceStore } from "@/stores/charts/price";
 import { useInstrumentStore } from "@/stores/instruments/main";
 import { storeToRefs } from "pinia";
-import { onMounted, Ref, watch } from "vue";
+import { onMounted, ref, Ref, watch } from "vue";
 
 const props = defineProps<{
   timeCtx: Ref;
@@ -52,8 +52,7 @@ const { drawChart, onMainWheel, onMouseMove, startPan, endPan } =
 const storeDrag = useDragStore();
 const { startPriceScaleDrag } = storeDrag;
 const priceChart = useChartPriceStore();
-const { centerPrice, priceRange, priceCanvas, priceCtx } =
-  storeToRefs(priceChart);
+const { centerPrice, priceRange } = storeToRefs(priceChart);
 const { onPriceWheel, onPriceScaleDrag, endPriceScaleDrag } = priceChart;
 const candelChart = useChartCandelStore();
 const { candleWidth, candles } = storeToRefs(candelChart);
@@ -61,6 +60,9 @@ const emaStore = useChartEmaStore();
 const { isClickOnEMA } = emaStore;
 const instrumentStore = useInstrumentStore();
 const { onAddInstrument } = instrumentStore;
+
+const priceCanvas = ref(null);
+const priceCtx = ref(null);
 
 function onCanvasContextMenu(e) {
   const rect = mainCanvas.value.getBoundingClientRect();
@@ -73,7 +75,7 @@ function onCanvasContextMenu(e) {
     return;
   }
 
-  onAddInstrument(e);
+  onAddInstrument(e, props.timeCtx.value, priceCtx.value);
 }
 
 // watch([scale, offset], drawChart);
@@ -81,7 +83,8 @@ watch([width, height], () => {
   if (mainCanvas.value) mainCanvas.value.width = width.value;
   if (mainCanvas.value) mainCanvas.value.height = height.value;
   if (priceCanvas.value) priceCanvas.value.height = height.value;
-  drawChart(props.timeCtx);
+
+  drawChart(props.timeCtx.value, priceCtx.value);
 });
 
 onMounted(() => {
@@ -103,9 +106,8 @@ onMounted(() => {
 
   const totalCandlesWidth = totalCandleWidth * candles.value.length;
   offset.value.x = -(totalCandlesWidth * scale.value) + width.value * 0.75;
-  console.log(props.timeCtx);
 
-  drawChart(props.timeCtx);
+  drawChart(props.timeCtx, priceCtx.value);
 });
 </script>
 <style scoped>

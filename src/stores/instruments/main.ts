@@ -6,11 +6,11 @@ export enum Instruments {
 }
 export const useInstrumentStore = defineStore("instrument", () => {
   const instrimentActiv = ref(null);
-  function onAddInstrument(e) {
+  function onAddInstrument(e, timeCtx, priceCtx) {
     const levelStore = useLevelStore();
     const { addLevls } = levelStore;
     if (instrimentActiv.value === Instruments.LVL) {
-      addLevls(e);
+      addLevls(e, timeCtx, priceCtx);
     }
   }
 

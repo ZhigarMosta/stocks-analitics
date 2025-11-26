@@ -10,8 +10,6 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
   const priceScale = ref(1);
   const centerPrice = ref();
   const priceRange = ref();
-  const priceCanvas = ref(null);
-  const priceCtx = ref(null);
 
   function scaleYFromPrice(price) {
     const mainChart = useChartMainStore();
@@ -91,11 +89,11 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     return niceFraction * Math.pow(10, exponent);
   }
 
-  function drawPriceScale() {
+  function drawPriceScale(priceCtx) {
     const mainChart = useChartMainStore();
     const { height, mouse } = storeToRefs(mainChart);
 
-    const context = priceCtx.value;
+    const context = priceCtx;
 
     context.clearRect(0, 0, PRICE_CANVAS_WIDTH, height.value);
 
@@ -146,7 +144,7 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     );
   }
 
-  function onPriceWheel(e, timeCtx) {
+  function onPriceWheel(e, timeCtx, priceCtx) {
     const mainChart = useChartMainStore();
     const { height } = storeToRefs(mainChart);
     const { drawChart } = mainChart;
@@ -163,10 +161,10 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     const priceAfter = priceFromY(centerY);
     centerPrice.value += priceBefore - priceAfter;
 
-    drawChart(timeCtx);
+    drawChart(timeCtx, priceCtx);
   }
 
-  function onPriceScaleDrag(e, timeCtx) {
+  function onPriceScaleDrag(e, timeCtx, priceCtx) {
     const drag = useDragStore();
     const { scalingPriceByDrag } = storeToRefs(drag);
     const mainChart = useChartMainStore();
@@ -189,7 +187,7 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     centerPrice.value += priceBefore - priceAfter;
     lastMouse.value = { x: e.offsetX, y: e.offsetY };
 
-    drawChart(timeCtx);
+    drawChart(timeCtx, priceCtx);
   }
 
   function drawHoverPriceLine(ctx) {
@@ -245,8 +243,6 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     priceScale,
     centerPrice,
     priceRange,
-    priceCanvas,
-    priceCtx,
     scaleYFromPrice,
     priceFromY,
     drawHoverHighLowLine,

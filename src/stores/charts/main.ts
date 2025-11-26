@@ -42,7 +42,7 @@ export const useChartMainStore = defineStore("chartMain", () => {
     });
   }
 
-  function drawChart(timeCtx) {
+  function drawChart(timeCtx, priceCtx) {
     const levelStore = useLevelStore();
     const { drawLevels } = levelStore;
     const candelStore = useChartCandelStore();
@@ -70,17 +70,19 @@ export const useChartMainStore = defineStore("chartMain", () => {
     drawEMA(context, height.value);
 
     context.restore();
-    // Остальная отрисовка
+
     drawHoverDate(context, height);
     drawWicksUnscaled(context);
     drawHoverLine(context);
-    drawPriceScale();
+    // console.trace(priceCtx);
+    
+    drawPriceScale(priceCtx);
     drawHoverPriceLine(context);
     drawHoverHighLowLine(context);
     drawTimeAxis(width, candleWidth, spacing, offset, scale, candles, timeCtx);
   }
 
-  function onMainWheel(e, timeCtx) {
+  function onMainWheel(e, timeCtx, priceCtx) {
     const candelStore = useChartCandelStore();
     const { candleWidth, candles } = storeToRefs(candelStore);
 
@@ -114,10 +116,10 @@ export const useChartMainStore = defineStore("chartMain", () => {
 
     clampHorizontalOffset();
 
-    drawChart(timeCtx);
+    drawChart(timeCtx, priceCtx);
   }
 
-  function onMouseMove(e, timeCtx) {
+  function onMouseMove(e, timeCtx, priceCtx) {
     const priceChart = useChartPriceStore();
     const { priceScale, centerPrice, priceRange } = storeToRefs(priceChart);
     const storeDrag = useDragStore();
@@ -140,7 +142,7 @@ export const useChartMainStore = defineStore("chartMain", () => {
       clampHorizontalOffset();
     }
 
-    drawChart(timeCtx);
+    drawChart(timeCtx, priceCtx);
   }
 
   function clampHorizontalOffset() {
