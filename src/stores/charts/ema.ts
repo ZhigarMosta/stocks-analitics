@@ -6,8 +6,8 @@ import { useChartPriceStore } from "./price";
 export const useChartEmaStore = defineStore("chartEma", () => {
   function drawEMA(
     ctx: CanvasRenderingContext2D,
-    areaHeight: number,
-    isIndicatorArea = false
+    isIndicatorArea = false,
+    height: number
   ) {
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
@@ -29,7 +29,7 @@ export const useChartEmaStore = defineStore("chartEma", () => {
       const x = i * stepX + candleWidth.value / 2;
       let y;
 
-      y = scaleYFromPrice(candle.close);
+      y = scaleYFromPrice(candle.close, height);
 
       if (i === 0) {
         ctx.moveTo(x, y);
@@ -75,7 +75,7 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     return Math.sqrt(dx * dx + dy * dy) < threshold;
   }
 
-  function isClickOnEMA(x, y, threshold = 5) {
+  function isClickOnEMA(x, y, threshold = 5, height: number) {
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
     const mainPrice = useChartPriceStore();
@@ -92,10 +92,10 @@ export const useChartEmaStore = defineStore("chartEma", () => {
       const nextCandle = candles.value[i + 1];
 
       const x1 = i * stepX + candleWidth.value / 2;
-      const y1 = scaleYFromPrice(currentCandle.close);
+      const y1 = scaleYFromPrice(currentCandle.close, height);
 
       const x2 = (i + 1) * stepX + candleWidth.value / 2;
-      const y2 = scaleYFromPrice(nextCandle.close);
+      const y2 = scaleYFromPrice(nextCandle.close, height);
 
       const transformedX1 = x1 * scale.value + offset.value.x;
       const transformedX2 = x2 * scale.value + offset.value.x;

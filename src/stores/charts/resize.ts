@@ -9,27 +9,24 @@ export const useResizeStore = defineStore("resize", () => {
   const resizeStart = ref({ x: 0, y: 0 });
   const startSize = ref({ width: 0, height: 0 });
 
-  function startResize(direction, e) {
-    const mainStore = useChartMainStore();
-    const { width, height } = storeToRefs(mainStore);
-
+  function startResize(direction, e, width: number, height: number) {
     e.preventDefault();
     e.stopPropagation();
 
     isResizing.value = true;
     resizeDirection.value = direction;
     resizeStart.value = { x: e.clientX, y: e.clientY };
-    startSize.value = { width: width.value, height: height.value };
+    startSize.value = { width: width, height: height };
 
-    document.addEventListener("mousemove", onResizeMove);
-    document.addEventListener("mouseup", stopResize);
+    document.addEventListener("mousemove", (e) =>
+      onResizeMove(e, width, height)
+    );
+    document.addEventListener("mouseup", (e) => stopResize(e, width, height));
   }
 
-  function onResizeMove(e) {
+  function onResizeMove(e, width: number, height: number) {
     const storeDrag = useDragStore();
     const { containerPosition } = storeToRefs(storeDrag);
-    const mainStore = useChartMainStore();
-    const { width, height } = storeToRefs(mainStore);
 
     if (!isResizing.value) return;
 
@@ -44,7 +41,7 @@ export const useResizeStore = defineStore("resize", () => {
     switch (resizeDirection.value) {
       case "top":
         newHeight = Math.max(200, startSize.value.height - dy);
-        if (height.value > 200) {
+        if (height > 200) {
           newY = e.clientY;
         }
         break;
@@ -56,31 +53,31 @@ export const useResizeStore = defineStore("resize", () => {
         break;
       case "left":
         newWidth = Math.max(300, startSize.value.width - dx);
-        if (width.value > 300) {
+        if (width > 300) {
           newX = e.clientX;
         }
         break;
       case "top-left":
         newWidth = Math.max(300, startSize.value.width - dx);
         newHeight = Math.max(200, startSize.value.height - dy);
-        if (width.value > 300) {
+        if (width > 300) {
           newX = e.clientX;
         }
-        if (height.value > 200) {
+        if (height > 200) {
           newY = e.clientY;
         }
         break;
       case "top-right":
         newWidth = Math.max(300, startSize.value.width + dx);
         newHeight = Math.max(200, startSize.value.height - dy);
-        if (height.value != 200) {
+        if (height != 200) {
           newY = e.clientY;
         }
         break;
       case "bottom-left":
         newWidth = Math.max(300, startSize.value.width - dx);
         newHeight = Math.max(200, startSize.value.height + dy);
-        if (width.value > 300) {
+        if (width > 300) {
           newX = e.clientX;
         }
         break;
@@ -90,20 +87,19 @@ export const useResizeStore = defineStore("resize", () => {
         break;
     }
 
-    width.value = newWidth;
-    height.value = newHeight;
+    width = newWidth;
+    height = newHeight;
     containerPosition.value.x = newX;
     containerPosition.value.y = newY;
-
   }
 
-  function stopResize() {
+  function stopResize(e, width: number, height: number) {
     const mainStore = useChartMainStore();
     const { drawChart } = mainStore;
 
     isResizing.value = false;
-    document.removeEventListener("mousemove", onResizeMove);
-    document.removeEventListener("mouseup", stopResize);
+    document.removeEventListener("mousemove", (e) => onResizeMove(e, width, height));
+    document.removeEventListener("mouseup", (e) => stopResize(e, width, height));
 
     // drawChart();
   }

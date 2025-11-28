@@ -1,5 +1,5 @@
 import { defineStore, storeToRefs } from "pinia";
-import { ref } from "vue";
+import { h, ref } from "vue";
 import { useLevelStore } from "../instruments/level";
 import { useChartCandelStore } from "./candel";
 import { useChartPriceStore } from "./price";
@@ -11,17 +11,13 @@ import { useDragStore } from "./drag";
 export const TIME_CANVAS_HEIGHT = 40;
 
 export const useChartMainStore = defineStore("chartMain", () => {
-  const ctx = ref(null);
   const spacing = ref(4);
-  const width = ref(500);
-  const height = ref(500);
   const offset = ref({ x: 0, y: 0 });
   const mouse = ref({ x: 0, y: 0 });
   const scale = ref(1);
   const lastMouse = ref({ x: 0, y: 0 });
-  const mainCanvas = ref(null);
 
-  function drawWicksUnscaled(ctx) {
+  function drawWicksUnscaled(ctx, height: number) {
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
     const priceStore = useChartPriceStore();
@@ -29,8 +25,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
 
     candles.value.forEach((c, i) => {
       const x = i * (candleWidth.value + spacing.value) + candleWidth.value / 2;
-      const highY = scaleYFromPrice(c.high);
-      const lowY = scaleYFromPrice(c.low);
+      const highY = scaleYFromPrice(c.high, height);
+      const lowY = scaleYFromPrice(c.low, height);
       const color = c.close >= c.open ? "#4caf50" : "#f44336";
 
       ctx.strokeStyle = color;
@@ -42,7 +38,13 @@ export const useChartMainStore = defineStore("chartMain", () => {
     });
   }
 
-  function drawChart(timeCtx, priceCtx, mainCtx) {
+  function drawChart(
+    timeCtx,
+    priceCtx,
+    mainCtx,
+    width: number,
+    height: number
+  ) {
     const levelStore = useLevelStore();
     const { drawLevels } = levelStore;
     const candelStore = useChartCandelStore();
@@ -58,31 +60,37 @@ export const useChartMainStore = defineStore("chartMain", () => {
     const { drawPriceScale, drawHoverPriceLine, drawHoverLine } = priceStore;
 
     const context = mainCtx;
-    context.clearRect(0, 0, width.value, height.value);
+    context.clearRect(0, 0, width, height);
 
     context.save();
     context.translate(offset.value.x, 0);
     context.scale(scale.value, 1);
 
-    drawLevels(context);
-    drawCandlesBodiesOnly(context);
-    drawVolumes(context);
-    drawEMA(context, height.value);
+    drawLevels(context, width, height);
+    drawCandlesBodiesOnly(context, height);
+    drawVolumes(context, height);
+    drawEMA(context, false, height);
 
     context.restore();
 
-    drawHoverDate(context, height);
-    drawWicksUnscaled(context);
-    drawHoverLine(context);
-    // console.trace(priceCtx);
+    drawHoverDate(context, height, width);
+    drawWicksUnscaled(context, height);
+    drawHoverLine(context, width, height);
 
-    drawPriceScale(priceCtx);
-    drawHoverPriceLine(context);
-    drawHoverHighLowLine(context);
+    drawPriceScale(priceCtx, height);
+    drawHoverPriceLine(context, width, height);
+    drawHoverHighLowLine(context, height);
     drawTimeAxis(width, candleWidth, spacing, offset, scale, candles, timeCtx);
   }
 
-  function onMainWheel(e, timeCtx, priceCtx, mainCtx) {
+  function onMainWheel(
+    e: WheelEvent,
+    timeCtx: any,
+    priceCtx: any,
+    mainCtx: any,
+    width: number,
+    height: number
+  ) {
     const candelStore = useChartCandelStore();
     const { candleWidth, candles } = storeToRefs(candelStore);
 
@@ -97,7 +105,7 @@ export const useChartMainStore = defineStore("chartMain", () => {
       const dx = (worldXAfterZoom - worldXBeforeZoom) * scale.value;
       offset.value.x += dx;
     } else {
-      const pivotX = width.value;
+      const pivotX = width;
       const worldPivotBefore = (pivotX - offset.value.x) / scale.value;
 
       candleWidth.value = Math.max(2, candleWidth.value * delta);
@@ -110,16 +118,23 @@ export const useChartMainStore = defineStore("chartMain", () => {
 
       const totalGraphWidth =
         candles.value.length * newTotalWidth * scale.value;
-      const minOffsetX = Math.min(width.value - totalGraphWidth, 0);
+      const minOffsetX = Math.min(width - totalGraphWidth, 0);
       offset.value.x = Math.max(minOffsetX, offset.value.x);
     }
 
     clampHorizontalOffset();
 
-    drawChart(timeCtx, priceCtx, mainCtx);
+    drawChart(timeCtx, priceCtx, mainCtx, width, height);
   }
 
-  function onMouseMove(e, timeCtx, priceCtx, mainCtx) {
+  function onMouseMove(
+    e,
+    timeCtx,
+    priceCtx,
+    mainCtx,
+    width: number,
+    height: number
+  ) {
     const priceChart = useChartPriceStore();
     const { priceScale, centerPrice, priceRange } = storeToRefs(priceChart);
     const storeDrag = useDragStore();
@@ -134,7 +149,7 @@ export const useChartMainStore = defineStore("chartMain", () => {
       offset.value.x += dx;
 
       const priceDelta =
-        ((dy / (height.value - 100)) * priceRange.value) / priceScale.value;
+        ((dy / (height - 100)) * priceRange.value) / priceScale.value;
       centerPrice.value += priceDelta;
 
       lastMouse.value = { x: e.offsetX, y: e.offsetY };
@@ -142,7 +157,7 @@ export const useChartMainStore = defineStore("chartMain", () => {
       clampHorizontalOffset();
     }
 
-    drawChart(timeCtx, priceCtx, mainCtx);
+    drawChart(timeCtx, priceCtx, mainCtx, width, height);
   }
 
   function clampHorizontalOffset() {
@@ -177,15 +192,11 @@ export const useChartMainStore = defineStore("chartMain", () => {
   }
 
   return {
-    width,
-    height,
     spacing,
     offset,
     mouse,
     scale,
     lastMouse,
-    ctx,
-    mainCanvas,
     drawChart,
     onMainWheel,
     onMouseMove,

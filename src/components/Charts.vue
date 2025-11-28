@@ -20,7 +20,12 @@
       </div>
 
       <div>
-          <Chart v-if="timeCtx" :timeCtx="timeCtx" />
+        <Chart
+          v-if="timeCtx"
+          :timeCtx="timeCtx"
+          :width="width"
+          :height="height"
+        />
         <canvas
           ref="timeCanvas"
           class="time-canvas"
@@ -33,40 +38,40 @@
     <div
       class="resizer resizer-top"
       :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
-      @mousedown="startResize('top', $event)"
+      @mousedown="startResize('top', $event, width, height)"
     ></div>
     <div
       class="resizer resizer-right"
       :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
-      @mousedown="startResize('right', $event)"
+      @mousedown="startResize('right', $event, width, height)"
     ></div>
     <div
       class="resizer resizer-bottom"
       :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
-      @mousedown="startResize('bottom', $event)"
+      @mousedown="startResize('bottom', $event, width, height)"
     ></div>
     <div
       class="resizer resizer-left"
-      @mousedown="startResize('left', $event)"
+      @mousedown="startResize('left', $event, width, height)"
     ></div>
 
     <div
       class="resizer resizer-top-left"
-      @mousedown="startResize('top-left', $event)"
+      @mousedown="startResize('top-left', $event, width, height)"
     ></div>
     <div
       class="resizer resizer-top-right"
       :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
-      @mousedown="startResize('top-right', $event)"
+      @mousedown="startResize('top-right', $event, width, height)"
     ></div>
     <div
       class="resizer resizer-bottom-left"
-      @mousedown="startResize('bottom-left', $event)"
+      @mousedown="startResize('bottom-left', $event, width, height)"
     ></div>
     <div
       class="resizer resizer-bottom-right"
       :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
-      @mousedown="startResize('bottom-right', $event)"
+      @mousedown="startResize('bottom-right', $event, width, height)"
     ></div>
   </div>
 </template>
@@ -74,32 +79,129 @@
 import { storeToRefs } from "pinia";
 import { ref, computed, watch, onMounted } from "vue";
 import { useDragStore } from "@/stores/charts/drag";
-import { useChartMainStore } from "@/stores/charts/main";
 import { useResizeStore } from "@/stores/charts/resize";
 import { useLevelStore } from "@/stores/instruments/level";
 import { Instruments, useInstrumentStore } from "@/stores/instruments/main";
 import Chart from "./Chart.vue";
-import { TIME_CANVAS_HEIGHT, useChartTimeStore } from "@/stores/charts/time";
-import { useUserStore } from "@/stores/user/user";
+import { TIME_CANVAS_HEIGHT } from "@/stores/charts/time";
 
-const storeChartMain = useChartMainStore();
-const { width, height } = storeToRefs(storeChartMain);
 const storeDrag = useDragStore();
 const { containerPosition } = storeToRefs(storeDrag);
 const { startContainerDrag } = storeDrag;
 const chartContainer = ref(null);
 const widthInstrumentsAndPrice = 160;
 const resizeStore = useResizeStore();
-const { startResize } = resizeStore;
+// const { startResize } = resizeStore;
 const levelStore = useLevelStore();
 const { onSwitchInstrumentToLevels } = levelStore;
 const instrumentStore = useInstrumentStore();
 const { instrimentActiv } = storeToRefs(instrumentStore);
+const isResizing = ref(false);
+const resizeDirection = ref("");
+const resizeStart = ref({ x: 0, y: 0 });
+const startSize = ref({ width: 0, height: 0 });
+
+const width = ref(500);
+const height = ref(500);
+
 const timeCanvas = ref(null);
 const timeCtx = ref(null);
+
 const containerStyle = computed(() => ({
   transform: `translate(${containerPosition.value.x}px, ${containerPosition.value.y}px)`,
 }));
+
+function startResize(direction, e) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  isResizing.value = true;
+  resizeDirection.value = direction;
+  resizeStart.value = { x: e.clientX, y: e.clientY };
+  startSize.value = { width: width.value, height: height.value };
+
+  document.addEventListener("mousemove", (e) => onResizeMove(e));
+  document.addEventListener("mouseup", (e) => stopResize(e));
+}
+
+function onResizeMove(e) {
+  const storeDrag = useDragStore();
+  const { containerPosition } = storeToRefs(storeDrag);
+
+  if (!isResizing.value) return;
+
+  const dx = e.clientX - resizeStart.value.x;
+  const dy = e.clientY - resizeStart.value.y;
+
+  let newWidth = startSize.value.width;
+  let newHeight = startSize.value.height;
+  let newX = containerPosition.value.x;
+  let newY = containerPosition.value.y;
+
+  switch (resizeDirection.value) {
+    case "top":
+      newHeight = Math.max(200, startSize.value.height - dy);
+      if (height.value > 200) {
+        newY = e.clientY;
+      }
+      break;
+    case "right":
+      newWidth = Math.max(300, startSize.value.width + dx);
+      break;
+    case "bottom":
+      newHeight = Math.max(200, startSize.value.height + dy);
+      break;
+    case "left":
+      newWidth = Math.max(300, startSize.value.width - dx);
+      if (width.value > 300) {
+        newX = e.clientX;
+      }
+      break;
+    case "top-left":
+      newWidth = Math.max(300, startSize.value.width - dx);
+      newHeight = Math.max(200, startSize.value.height - dy);
+      if (width.value > 300) {
+        newX = e.clientX;
+      }
+      if (height.value > 200) {
+        newY = e.clientY;
+      }
+      break;
+    case "top-right":
+      newWidth = Math.max(300, startSize.value.width + dx);
+      newHeight = Math.max(200, startSize.value.height - dy);
+      if (height.value != 200) {
+        newY = e.clientY;
+      }
+      break;
+    case "bottom-left":
+      newWidth = Math.max(300, startSize.value.width - dx);
+      newHeight = Math.max(200, startSize.value.height + dy);
+      if (width.value > 300) {
+        newX = e.clientX;
+      }
+      break;
+    case "bottom-right":
+      newWidth = Math.max(300, startSize.value.width + dx);
+      newHeight = Math.max(200, startSize.value.height + dy);
+      break;
+  }
+
+  width.value = newWidth;
+  height.value = newHeight;
+  containerPosition.value.x = newX;
+  containerPosition.value.y = newY;
+}
+
+function stopResize(e) {
+  isResizing.value = false;
+  document.removeEventListener("mousemove", (e) =>
+    onResizeMove(e)
+  );
+  document.removeEventListener("mouseup", (e) => stopResize(e));
+
+  // drawChart();
+}
 
 watch([width, height], () => {
   if (timeCanvas.value) {

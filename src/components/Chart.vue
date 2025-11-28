@@ -10,8 +10,28 @@
           @mousedown="startPan"
           @mouseup="endPan"
           @mouseleave="endPan"
-          @mousemove="(e) => onMouseMove(e, timeCtx, priceCtx, mainCtx)"
-          @wheel="(e) => onMainWheel(e, timeCtx, priceCtx, mainCtx)"
+          @mousemove="
+            (e) =>
+              onMouseMove(
+                e,
+                timeCtx,
+                priceCtx,
+                mainCtx,
+                props.width,
+                props.height
+              )
+          "
+          @wheel="
+            (e) =>
+              onMainWheel(
+                e,
+                timeCtx,
+                priceCtx,
+                mainCtx,
+                props.width,
+                props.height
+              )
+          "
           @contextmenu.prevent="onCanvasContextMenu"
         />
         <canvas
@@ -19,9 +39,29 @@
           class="chart-price"
           :width="PRICE_CANVAS_WIDTH"
           :height="height"
-          @wheel="(e) => onPriceWheel(e, timeCtx, priceCtx, mainCtx)"
+          @wheel="
+            (e) =>
+              onPriceWheel(
+                e,
+                timeCtx,
+                priceCtx,
+                mainCtx,
+                props.width,
+                props.height
+              )
+          "
           @mousedown="startPriceScaleDrag"
-          @mousemove="(e) => onPriceScaleDrag(e, timeCtx, priceCtx, mainCtx)"
+          @mousemove="
+            (e) =>
+              onPriceScaleDrag(
+                e,
+                timeCtx,
+                priceCtx,
+                mainCtx,
+                props.width,
+                props.height
+              )
+          "
           @mouseup="endPriceScaleDrag"
           @mouseleave="endPriceScaleDrag"
         />
@@ -42,11 +82,12 @@ import { onMounted, ref, Ref, watch } from "vue";
 
 const props = defineProps<{
   timeCtx: Ref;
+  width: number;
+  height: number;
 }>();
 
 const storeChartMain = useChartMainStore();
-const { width, height, spacing, offset, scale } =
-  storeToRefs(storeChartMain);
+const { spacing, offset, scale } = storeToRefs(storeChartMain);
 const { drawChart, onMainWheel, onMouseMove, startPan, endPan } =
   storeChartMain;
 const storeDrag = useDragStore();
@@ -72,22 +113,35 @@ function onCanvasContextMenu(e) {
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
 
-  if (isClickOnEMA(x, y)) {
+  if (isClickOnEMA(x, y, 5, props.height)) {
     e.preventDefault();
     console.log("hello - EMA clicked!");
     return;
   }
 
-  onAddInstrument(e, props.timeCtx.value, priceCtx.value, mainCtx.value);
+  onAddInstrument(
+    e,
+    props.timeCtx.value,
+    priceCtx.value,
+    mainCtx.value,
+    props.width,
+    props.height
+  );
 }
 
 // watch([scale, offset], drawChart);
-watch([width, height], () => {
-  if (mainCanvas.value) mainCanvas.value.width = width.value;
-  if (mainCanvas.value) mainCanvas.value.height = height.value;
-  if (priceCanvas.value) priceCanvas.value.height = height.value;
+watch([props.width, props.height], () => {
+  if (mainCanvas.value) mainCanvas.value.width = props.width;
+  if (mainCanvas.value) mainCanvas.value.height = props.height;
+  if (priceCanvas.value) priceCanvas.value.height = props.height;
 
-  drawChart(props.timeCtx.value, priceCtx.value, mainCtx.value);
+  drawChart(
+    props.timeCtx.value,
+    priceCtx.value,
+    mainCtx.value,
+    props.width,
+    props.height
+  );
 });
 
 onMounted(() => {
@@ -104,13 +158,19 @@ onMounted(() => {
   const totalCandleWidth = candleWidth.value + spacing.value;
   const candlesWidthOnScreen = totalCandleWidth * visibleCandles;
 
-  const halfScreenWidth = width.value / 2;
+  const halfScreenWidth = props.width / 2;
   scale.value = halfScreenWidth / candlesWidthOnScreen;
 
   const totalCandlesWidth = totalCandleWidth * candles.value.length;
-  offset.value.x = -(totalCandlesWidth * scale.value) + width.value * 0.75;
+  offset.value.x = -(totalCandlesWidth * scale.value) + props.width * 0.75;
 
-  drawChart(props.timeCtx, priceCtx.value, mainCtx.value);
+  drawChart(
+    props.timeCtx,
+    priceCtx.value,
+    mainCtx.value,
+    props.width,
+    props.height
+  );
 });
 </script>
 <style scoped>

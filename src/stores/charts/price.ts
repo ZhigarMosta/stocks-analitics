@@ -11,31 +11,31 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
   const centerPrice = ref();
   const priceRange = ref();
 
-  function scaleYFromPrice(price) {
+  function scaleYFromPrice(price, height: number) {
     const mainChart = useChartMainStore();
-    const { offset, height } = storeToRefs(mainChart);
+    const { offset } = storeToRefs(mainChart);
 
-    const drawableHeight = height.value - 100;
-    const visualCenter = height.value / 2 + offset.value.y;
+    const drawableHeight = height - 100;
+    const visualCenter = height / 2 + offset.value.y;
     const normalized = (price - centerPrice.value) / priceRange.value;
     return visualCenter - normalized * drawableHeight * priceScale.value;
   }
 
-  function priceFromY(y) {
+  function priceFromY(y, height: number) {
     const mainChart = useChartMainStore();
-    const { offset, height } = storeToRefs(mainChart);
+    const { offset } = storeToRefs(mainChart);
 
-    const drawableHeight = height.value - 100;
-    const visualCenter = height.value / 2 + offset.value.y;
+    const drawableHeight = height - 100;
+    const visualCenter = height / 2 + offset.value.y;
     const normalized = (visualCenter - y) / (drawableHeight * priceScale.value);
     return centerPrice.value + normalized * priceRange.value;
   }
 
-  function drawHoverHighLowLine(ctx) {
+  function drawHoverHighLowLine(ctx, height: number) {
     const candelChart = useChartCandelStore();
     const { candleWidth, candles } = storeToRefs(candelChart);
     const mainChart = useChartMainStore();
-    const { offset, height, mouse, spacing, scale } = storeToRefs(mainChart);
+    const { offset, mouse, spacing, scale } = storeToRefs(mainChart);
 
     if (!candles.value.length) return;
 
@@ -46,8 +46,8 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     const candle = candles.value[index];
     if (!candle) return;
 
-    const highY = scaleYFromPrice(candle.high);
-    const lowY = scaleYFromPrice(candle.low);
+    const highY = scaleYFromPrice(candle.high, height);
+    const lowY = scaleYFromPrice(candle.low, height);
 
     const distToHigh = Math.abs(mouse.value.y - highY);
     const distToLow = Math.abs(mouse.value.y - lowY);
@@ -62,7 +62,7 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
 
     ctx.beginPath();
     ctx.moveTo(x * scale.value + offset.value.x, 0);
-    ctx.lineTo(x * scale.value + offset.value.x, height.value);
+    ctx.lineTo(x * scale.value + offset.value.x, height);
     ctx.stroke();
 
     // Если нужно будет что то отображать возле свечи
@@ -89,28 +89,28 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     return niceFraction * Math.pow(10, exponent);
   }
 
-  function drawPriceScale(priceCtx) {
+  function drawPriceScale(priceCtx, height: number) {
     const mainChart = useChartMainStore();
-    const { height, mouse } = storeToRefs(mainChart);
+    const { mouse } = storeToRefs(mainChart);
 
     const context = priceCtx;
 
-    context.clearRect(0, 0, PRICE_CANVAS_WIDTH, height.value);
+    context.clearRect(0, 0, PRICE_CANVAS_WIDTH, height);
 
-    const visiblePriceStart = priceFromY(height.value);
-    const visiblePriceEnd = priceFromY(0);
+    const visiblePriceStart = priceFromY(height, height);
+    const visiblePriceEnd = priceFromY(0, height);
     const visibleRange = visiblePriceEnd - visiblePriceStart;
 
     const spaceBetweenPrice = 50;
-    const approxLineCount = Math.floor(height.value / spaceBetweenPrice);
+    const approxLineCount = Math.floor(height / spaceBetweenPrice);
     const step = getNicePriceStep(visibleRange, approxLineCount);
 
     const firstPrice = Math.ceil(visiblePriceStart / step) * step;
     const lastPrice = Math.floor(visiblePriceEnd / step) * step;
 
     for (let price = firstPrice; price <= lastPrice; price += step) {
-      const y = scaleYFromPrice(price);
-      if (y < 0 || y > height.value) continue;
+      const y = scaleYFromPrice(price, height);
+      if (y < 0 || y > height) continue;
 
       context.strokeStyle = "#ccc";
       context.beginPath();
@@ -124,7 +124,7 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
       context.fillText(price.toFixed(2), PRICE_CANVAS_WIDTH - 5, y + 4);
     }
 
-    const hoveredPrice = priceFromY(mouse.value.y);
+    const hoveredPrice = priceFromY(mouse.value.y, height);
     context.strokeStyle = "#888";
     context.beginPath();
     context.moveTo(0, mouse.value.y);
@@ -144,31 +144,44 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     );
   }
 
-  function onPriceWheel(e, timeCtx, priceCtx, mainCtx) {
+  function onPriceWheel(
+    e,
+    timeCtx,
+    priceCtx,
+    mainCtx,
+    width: number,
+    height: number
+  ) {
     const mainChart = useChartMainStore();
-    const { height } = storeToRefs(mainChart);
     const { drawChart } = mainChart;
 
     e.preventDefault();
     const zoomFactor = 1.1;
     const delta = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
 
-    const centerY = height.value / 2;
-    const priceBefore = priceFromY(centerY);
+    const centerY = height / 2;
+    const priceBefore = priceFromY(centerY, height);
 
     priceScale.value = Math.min(100, Math.max(0.01, priceScale.value * delta));
 
-    const priceAfter = priceFromY(centerY);
+    const priceAfter = priceFromY(centerY, height);
     centerPrice.value += priceBefore - priceAfter;
 
-    drawChart(timeCtx, priceCtx, mainCtx);
+    drawChart(timeCtx, priceCtx, mainCtx, width, height);
   }
 
-  function onPriceScaleDrag(e, timeCtx, priceCtx, mainCtx) {
+  function onPriceScaleDrag(
+    e,
+    timeCtx,
+    priceCtx,
+    mainCtx,
+    width: number,
+    height: number
+  ) {
     const drag = useDragStore();
     const { scalingPriceByDrag } = storeToRefs(drag);
     const mainChart = useChartMainStore();
-    const { height, lastMouse } = storeToRefs(mainChart);
+    const { lastMouse } = storeToRefs(mainChart);
     const { drawChart } = mainChart;
 
     if (!scalingPriceByDrag.value) return;
@@ -178,23 +191,23 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     const zoomFactor = 1.038; // чувствительность
     const delta = dy > 0 ? 1 / zoomFactor : zoomFactor;
 
-    const centerY = height.value / 2;
+    const centerY = height / 2;
 
-    const priceBefore = priceFromY(centerY);
+    const priceBefore = priceFromY(centerY, height);
     priceScale.value = Math.max(0.01, Math.min(100, priceScale.value * delta));
-    const priceAfter = priceFromY(centerY);
+    const priceAfter = priceFromY(centerY, height);
 
     centerPrice.value += priceBefore - priceAfter;
     lastMouse.value = { x: e.offsetX, y: e.offsetY };
 
-    drawChart(timeCtx, priceCtx, mainCtx);
+    drawChart(timeCtx, priceCtx, mainCtx, width, height);
   }
 
-  function drawHoverPriceLine(ctx) {
+  function drawHoverPriceLine(ctx, width: number, height: number) {
     const candelChart = useChartCandelStore();
     const { candleWidth, candles } = storeToRefs(candelChart);
     const mainChart = useChartMainStore();
-    const { offset, mouse, spacing, scale, width } = storeToRefs(mainChart);
+    const { offset, mouse, spacing, scale } = storeToRefs(mainChart);
 
     if (!candles.value.length) return;
 
@@ -205,7 +218,7 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     const candle = candles.value[index];
     if (!candle) return;
 
-    const y = scaleYFromPrice(candle.high);
+    const y = scaleYFromPrice(candle.high, height);
 
     ctx.strokeStyle = "#ff9900";
     ctx.lineWidth = 1;
@@ -217,17 +230,17 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     ctx.setLineDash([]);
   }
 
-  function drawHoverLine(ctx) {
+  function drawHoverLine(ctx, width: number, height: number) {
     const mainChart = useChartMainStore();
-    const { mouse, width } = storeToRefs(mainChart);
+    const { mouse } = storeToRefs(mainChart);
 
     ctx.strokeStyle = "#cccccc";
     ctx.beginPath();
     ctx.moveTo(0, mouse.value.y);
-    ctx.lineTo(width.value, mouse.value.y);
+    ctx.lineTo(width, mouse.value.y);
     ctx.stroke();
 
-    const price = priceFromY(mouse.value.y);
+    const price = priceFromY(mouse.value.y, height);
     ctx.fillStyle = "#000";
     ctx.font = "12px sans-serif";
     ctx.fillText(price.toFixed(2), 5, mouse.value.y - 5);

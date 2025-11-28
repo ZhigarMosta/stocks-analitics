@@ -8,7 +8,7 @@ export const TIME_CANVAS_HEIGHT = 40;
 
 export const useChartTimeStore = defineStore("chartTime", () => {
   function drawTimeAxis(
-    width: Ref,
+    width: number,
     candleWidth: Ref,
     spacing: Ref,
     offset: Ref,
@@ -20,14 +20,14 @@ export const useChartTimeStore = defineStore("chartTime", () => {
 
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, width.value, TIME_CANVAS_HEIGHT);
+    ctx.clearRect(0, 0, width, TIME_CANVAS_HEIGHT);
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "#000";
     ctx.textAlign = "center";
 
     const candleStep = candleWidth.value + spacing.value;
     const visibleStart = -offset.value.x / scale.value;
-    const visibleEnd = (width.value - offset.value.x) / scale.value;
+    const visibleEnd = (width - offset.value.x) / scale.value;
 
     const skip = Math.ceil(60 / (candleWidth.value * scale.value));
 
@@ -47,9 +47,9 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     });
   }
 
-  function drawHoverDate(ctx, mainAreaHeight) {
+  function drawHoverDate(ctx, mainAreaHeight, width: number) {
     const mainStore = useChartMainStore();
-    const { mouse, offset, spacing, scale, width } = storeToRefs(mainStore);
+    const { mouse, offset, spacing, scale } = storeToRefs(mainStore);
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
 
@@ -69,7 +69,7 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     const textWidth = ctx.measureText(label).width;
     const labelX = Math.max(
       5,
-      Math.min(width.value - textWidth - 5, posX - textWidth / 2)
+      Math.min(width - textWidth - 5, posX - textWidth / 2)
     );
     const labelY = mainAreaHeight.value - 8;
 
@@ -82,9 +82,9 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     ctx.restore();
   }
 
-  function drawHoverHighLowLine(ctx) {
+  function drawHoverHighLowLine(ctx, height: number) {
     const mainStore = useChartMainStore();
-    const { mouse, offset, spacing, scale, height } = storeToRefs(mainStore);
+    const { mouse, offset, spacing, scale } = storeToRefs(mainStore);
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
     const priceStore = useChartPriceStore();
@@ -99,8 +99,8 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     const candle = candles.value[index];
     if (!candle) return;
 
-    const highY = scaleYFromPrice(candle.high);
-    const lowY = scaleYFromPrice(candle.low);
+    const highY = scaleYFromPrice(candle.high, height);
+    const lowY = scaleYFromPrice(candle.low, height);
 
     const distToHigh = Math.abs(mouse.value.y - highY);
     const distToLow = Math.abs(mouse.value.y - lowY);
@@ -115,7 +115,7 @@ export const useChartTimeStore = defineStore("chartTime", () => {
 
     ctx.beginPath();
     ctx.moveTo(x * scale.value + offset.value.x, 0);
-    ctx.lineTo(x * scale.value + offset.value.x, height.value);
+    ctx.lineTo(x * scale.value + offset.value.x, height);
     ctx.stroke();
 
     // Если нужно будет что то отображать возле свечи

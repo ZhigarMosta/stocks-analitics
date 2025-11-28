@@ -7,23 +7,28 @@ import { Instruments, useInstrumentStore } from "./main";
 export const useLevelStore = defineStore("level", () => {
   const levels = ref([100, 107, 110]);
 
-  function addLevls(e, timeCtx, priceCtx, mainCtx) {
+  function addLevls(
+    e,
+    timeCtx,
+    priceCtx,
+    mainCtx,
+    width: number,
+    height: number
+  ) {
     const priceStore = useChartPriceStore();
     const { priceFromY } = priceStore;
     const mainStore = useChartMainStore();
     const { drawChart } = mainStore;
 
     e.preventDefault();
-    levels.value.push(priceFromY(e.offsetY));
+    levels.value.push(priceFromY(e.offsetY, height));
 
-    drawChart(timeCtx, priceCtx, mainCtx);
+    drawChart(timeCtx, priceCtx, mainCtx, width, height);
   }
 
-  function drawLevels(ctx) {
+  function drawLevels(ctx, width: number, height: number) {
     const priceStore = useChartPriceStore();
     const { scaleYFromPrice } = priceStore;
-    const mainStore = useChartMainStore();
-    const { width } = storeToRefs(mainStore);
 
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -33,10 +38,10 @@ export const useLevelStore = defineStore("level", () => {
     ctx.setLineDash([4, 4]);
 
     levels.value.forEach((price) => {
-      const y = scaleYFromPrice(price);
+      const y = scaleYFromPrice(price, height);
       ctx.beginPath();
       ctx.moveTo(0, y);
-      ctx.lineTo(width.value + PRICE_CANVAS_WIDTH, y);
+      ctx.lineTo(width + PRICE_CANVAS_WIDTH, y);
       ctx.stroke();
     });
 
