@@ -192,6 +192,7 @@ function onResizeMove(e) {
 }
 
 function stopResize(e) {
+  if (isResizing.value === false) return;
   isResizing.value = false;
   document.removeEventListener("mousemove", (e) => onResizeMove(e));
   document.removeEventListener("mouseup", (e) => stopResize(e));
