@@ -51,7 +51,7 @@ import { useChartMainStore } from "@/stores/charts/main";
 import { PRICE_CANVAS_WIDTH, useChartPriceStore } from "@/stores/charts/price";
 import { useInstrumentStore } from "@/stores/instruments/main";
 import { storeToRefs } from "pinia";
-import { onMounted, onUnmounted, ref, Ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, Ref } from "vue";
 
 const props = defineProps<{
   timeCtx: Ref;
@@ -241,22 +241,6 @@ const handleResize = () => {
     priceScale.value
   );
 };
-
-watch([props.width, props.height], () => {
-  if (mainCanvas.value) mainCanvas.value.width = props.width;
-  if (mainCanvas.value) mainCanvas.value.height = props.height;
-  if (priceCanvas.value) priceCanvas.value.height = props.height;
-
-  drawChart(
-    props.timeCtx.value,
-    priceCtx.value,
-    mainCtx.value,
-    props.width,
-    props.height,
-    mouse.value,
-    priceScale.value
-  );
-});
 
 onMounted(() => {
   const highs = candles.value.map((c) => c.high);

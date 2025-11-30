@@ -49,7 +49,7 @@ export const useChartTimeStore = defineStore("chartTime", () => {
 
   function drawHoverDate(
     ctx,
-    mainAreaHeight,
+    height: number,
     width: number,
     mouse: { x: number; y: number }
   ) {
@@ -76,7 +76,7 @@ export const useChartTimeStore = defineStore("chartTime", () => {
       5,
       Math.min(width - textWidth - 5, posX - textWidth / 2)
     );
-    const labelY = mainAreaHeight.value - 8;
+    const labelY = height - 8;
 
     ctx.save();
     ctx.fillStyle = "#000";
