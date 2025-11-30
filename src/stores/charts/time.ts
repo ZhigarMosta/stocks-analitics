@@ -47,15 +47,20 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     });
   }
 
-  function drawHoverDate(ctx, mainAreaHeight, width: number) {
+  function drawHoverDate(
+    ctx,
+    mainAreaHeight,
+    width: number,
+    mouse: { x: number; y: number }
+  ) {
     const mainStore = useChartMainStore();
-    const { mouse, offset, spacing, scale } = storeToRefs(mainStore);
+    const { offset, spacing, scale } = storeToRefs(mainStore);
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
 
     if (!candles.value.length) return;
 
-    const relativeMouseX = (mouse.value.x - offset.value.x) / scale.value;
+    const relativeMouseX = (mouse.x - offset.value.x) / scale.value;
     const totalCandleWidth = candleWidth.value + spacing.value;
     const index = Math.floor(relativeMouseX / totalCandleWidth);
 
@@ -82,9 +87,14 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     ctx.restore();
   }
 
-  function drawHoverHighLowLine(ctx, height: number) {
+  function drawHoverHighLowLine(
+    ctx,
+    height: number,
+    priceScale: number,
+    mouse: { x: number; y: number }
+  ) {
     const mainStore = useChartMainStore();
-    const { mouse, offset, spacing, scale } = storeToRefs(mainStore);
+    const { offset, spacing, scale } = storeToRefs(mainStore);
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
     const priceStore = useChartPriceStore();
@@ -92,18 +102,18 @@ export const useChartTimeStore = defineStore("chartTime", () => {
 
     if (!candles.value.length) return;
 
-    const relativeMouseX = (mouse.value.x - offset.value.x) / scale.value;
+    const relativeMouseX = (mouse.x - offset.value.x) / scale.value;
     const totalCandleWidth = candleWidth.value + spacing.value;
     const index = Math.floor(relativeMouseX / totalCandleWidth);
 
     const candle = candles.value[index];
     if (!candle) return;
 
-    const highY = scaleYFromPrice(candle.high, height);
-    const lowY = scaleYFromPrice(candle.low, height);
+    const highY = scaleYFromPrice(candle.high, height, priceScale);
+    const lowY = scaleYFromPrice(candle.low, height, priceScale);
 
-    const distToHigh = Math.abs(mouse.value.y - highY);
-    const distToLow = Math.abs(mouse.value.y - lowY);
+    const distToHigh = Math.abs(mouse.y - highY);
+    const distToLow = Math.abs(mouse.y - lowY);
     const y = distToHigh < distToLow ? highY : lowY;
     const price = distToHigh < distToLow ? candle.high : candle.low;
 

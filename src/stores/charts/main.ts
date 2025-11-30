@@ -1,23 +1,20 @@
 import { defineStore, storeToRefs } from "pinia";
-import { h, ref } from "vue";
+import { Ref, ref } from "vue";
 import { useLevelStore } from "../instruments/level";
 import { useChartCandelStore } from "./candel";
 import { useChartPriceStore } from "./price";
 import { useChartVolumeStore } from "./volume";
 import { useChartEmaStore } from "./ema";
 import { useChartTimeStore } from "./time";
-import { useDragStore } from "./drag";
 
 export const TIME_CANVAS_HEIGHT = 40;
 
 export const useChartMainStore = defineStore("chartMain", () => {
   const spacing = ref(4);
   const offset = ref({ x: 0, y: 0 });
-  const mouse = ref({ x: 0, y: 0 });
   const scale = ref(1);
-  const lastMouse = ref({ x: 0, y: 0 });
 
-  function drawWicksUnscaled(ctx, height: number) {
+  function drawWicksUnscaled(ctx, height: number, priceScale: number) {
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
     const priceStore = useChartPriceStore();
@@ -25,8 +22,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
 
     candles.value.forEach((c, i) => {
       const x = i * (candleWidth.value + spacing.value) + candleWidth.value / 2;
-      const highY = scaleYFromPrice(c.high, height);
-      const lowY = scaleYFromPrice(c.low, height);
+      const highY = scaleYFromPrice(c.high, height, priceScale);
+      const lowY = scaleYFromPrice(c.low, height, priceScale);
       const color = c.close >= c.open ? "#4caf50" : "#f44336";
 
       ctx.strokeStyle = color;
@@ -43,7 +40,9 @@ export const useChartMainStore = defineStore("chartMain", () => {
     priceCtx,
     mainCtx,
     width: number,
-    height: number
+    height: number,
+    mouse: { x: number; y: number },
+    priceScale: number
   ) {
     const levelStore = useLevelStore();
     const { drawLevels } = levelStore;
@@ -66,20 +65,20 @@ export const useChartMainStore = defineStore("chartMain", () => {
     context.translate(offset.value.x, 0);
     context.scale(scale.value, 1);
 
-    drawLevels(context, width, height);
-    drawCandlesBodiesOnly(context, height);
+    drawLevels(context, width, height, priceScale);
+    drawCandlesBodiesOnly(context, height, priceScale);
     drawVolumes(context, height);
-    drawEMA(context, false, height);
+    drawEMA(context, false, height, priceScale);
 
     context.restore();
 
-    drawHoverDate(context, height, width);
-    drawWicksUnscaled(context, height);
-    drawHoverLine(context, width, height);
+    drawHoverDate(context, height, width, mouse);
+    drawWicksUnscaled(context, height, priceScale);
+    drawHoverLine(context, width, height, mouse, priceScale);
 
-    drawPriceScale(priceCtx, height);
-    drawHoverPriceLine(context, width, height);
-    drawHoverHighLowLine(context, height);
+    drawPriceScale(priceCtx, height, mouse, priceScale);
+    drawHoverPriceLine(context, width, height, mouse, priceScale);
+    drawHoverHighLowLine(context, height, priceScale, mouse);
     drawTimeAxis(width, candleWidth, spacing, offset, scale, candles, timeCtx);
   }
 
@@ -89,7 +88,9 @@ export const useChartMainStore = defineStore("chartMain", () => {
     priceCtx: any,
     mainCtx: any,
     width: number,
-    height: number
+    height: number,
+    mouse: { x: number; y: number },
+    priceScale: number
   ) {
     const candelStore = useChartCandelStore();
     const { candleWidth, candles } = storeToRefs(candelStore);
@@ -124,40 +125,7 @@ export const useChartMainStore = defineStore("chartMain", () => {
 
     clampHorizontalOffset();
 
-    drawChart(timeCtx, priceCtx, mainCtx, width, height);
-  }
-
-  function onMouseMove(
-    e,
-    timeCtx,
-    priceCtx,
-    mainCtx,
-    width: number,
-    height: number
-  ) {
-    const priceChart = useChartPriceStore();
-    const { priceScale, centerPrice, priceRange } = storeToRefs(priceChart);
-    const storeDrag = useDragStore();
-    const { dragging } = storeToRefs(storeDrag);
-
-    mouse.value = { x: e.offsetX, y: e.offsetY };
-
-    if (dragging.value) {
-      const dx = e.offsetX - lastMouse.value.x;
-      const dy = e.offsetY - lastMouse.value.y;
-
-      offset.value.x += dx;
-
-      const priceDelta =
-        ((dy / (height - 100)) * priceRange.value) / priceScale.value;
-      centerPrice.value += priceDelta;
-
-      lastMouse.value = { x: e.offsetX, y: e.offsetY };
-
-      clampHorizontalOffset();
-    }
-
-    drawChart(timeCtx, priceCtx, mainCtx, width, height);
+    drawChart(timeCtx, priceCtx, mainCtx, width, height, mouse, priceScale);
   }
 
   function clampHorizontalOffset() {
@@ -178,29 +146,11 @@ export const useChartMainStore = defineStore("chartMain", () => {
     }
   }
 
-  function startPan(e) {
-    const storeDrag = useDragStore();
-    const { dragging } = storeToRefs(storeDrag);
-    dragging.value = true;
-    lastMouse.value = { x: e.offsetX, y: e.offsetY };
-  }
-
-  function endPan() {
-    const storeDrag = useDragStore();
-    const { dragging } = storeToRefs(storeDrag);
-    dragging.value = false;
-  }
-
   return {
     spacing,
     offset,
-    mouse,
     scale,
-    lastMouse,
     drawChart,
     onMainWheel,
-    onMouseMove,
-    startPan,
-    endPan,
   };
 });

@@ -12,12 +12,14 @@ export const useInstrumentStore = defineStore("instrument", () => {
     priceCtx,
     mainCtx,
     width: number,
-    height: number
+    height: number,
+    mouse: { x: number; y: number },
+    priceScale: number
   ) {
     const levelStore = useLevelStore();
     const { addLevls } = levelStore;
     if (instrimentActiv.value === Instruments.LVL) {
-      addLevls(e, timeCtx, priceCtx, mainCtx, width, height);
+      addLevls(e, timeCtx, priceCtx, mainCtx, width, height, mouse, priceScale);
     }
   }
 

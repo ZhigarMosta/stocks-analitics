@@ -10,17 +10,7 @@
           @mousedown="startPan"
           @mouseup="endPan"
           @mouseleave="endPan"
-          @mousemove="
-            (e) =>
-              onMouseMove(
-                e,
-                timeCtx,
-                priceCtx,
-                mainCtx,
-                props.width,
-                props.height
-              )
-          "
+          @mousemove="onMouseMove"
           @wheel="
             (e) =>
               onMainWheel(
@@ -29,7 +19,9 @@
                 priceCtx,
                 mainCtx,
                 props.width,
-                props.height
+                props.height,
+                mouse,
+                priceScale
               )
           "
           @contextmenu.prevent="onCanvasContextMenu"
@@ -39,29 +31,9 @@
           class="chart-price"
           :width="PRICE_CANVAS_WIDTH"
           :height="height"
-          @wheel="
-            (e) =>
-              onPriceWheel(
-                e,
-                timeCtx,
-                priceCtx,
-                mainCtx,
-                props.width,
-                props.height
-              )
-          "
+          @wheel="onPriceWheel"
           @mousedown="startPriceScaleDrag"
-          @mousemove="
-            (e) =>
-              onPriceScaleDrag(
-                e,
-                timeCtx,
-                priceCtx,
-                mainCtx,
-                props.width,
-                props.height
-              )
-          "
+          @mousemove="onPriceScaleDrag"
           @mouseup="endPriceScaleDrag"
           @mouseleave="endPriceScaleDrag"
         />
@@ -89,13 +61,10 @@ const props = defineProps<{
 
 const storeChartMain = useChartMainStore();
 const { spacing, offset, scale } = storeToRefs(storeChartMain);
-const { drawChart, onMainWheel, onMouseMove, startPan, endPan } =
-  storeChartMain;
-const storeDrag = useDragStore();
-const { startPriceScaleDrag } = storeDrag;
+const { drawChart, onMainWheel } = storeChartMain;
 const priceChart = useChartPriceStore();
 const { centerPrice, priceRange } = storeToRefs(priceChart);
-const { onPriceWheel, onPriceScaleDrag, endPriceScaleDrag } = priceChart;
+const { priceFromY, endPriceScaleDrag } = priceChart;
 const candelChart = useChartCandelStore();
 const { candleWidth, candles } = storeToRefs(candelChart);
 const emaStore = useChartEmaStore();
@@ -105,16 +74,145 @@ const { onAddInstrument } = instrumentStore;
 
 const priceCanvas = ref(null);
 const priceCtx = ref(null);
+const priceScale = ref(1);
 
 const mainCanvas = ref(null);
 const mainCtx = ref(null);
+
+const dragging = ref(false);
+const lastMouse = ref({ x: 0, y: 0 });
+const mouse = ref({ x: 0, y: 0 });
+
+function startPan(e) {
+  dragging.value = true;
+  lastMouse.value = { x: e.offsetX, y: e.offsetY };
+}
+
+function endPan() {
+  dragging.value = false;
+}
+
+function onMouseMove(e) {
+  const priceChart = useChartPriceStore();
+  const { centerPrice, priceRange } = storeToRefs(priceChart);
+
+  mouse.value = { x: e.offsetX, y: e.offsetY };
+
+  if (dragging.value) {
+    const dx = e.offsetX - lastMouse.value.x;
+    const dy = e.offsetY - lastMouse.value.y;
+
+    offset.value.x += dx;
+
+    const priceDelta =
+      ((dy / (props.height - 100)) * priceRange.value) / priceScale.value;
+    centerPrice.value += priceDelta;
+
+    lastMouse.value = { x: e.offsetX, y: e.offsetY };
+
+    clampHorizontalOffset();
+  }
+
+  drawChart(
+    props.timeCtx,
+    priceCtx.value,
+    mainCtx.value,
+    props.width,
+    props.height,
+    mouse.value,
+    priceScale.value
+  );
+}
+
+function clampHorizontalOffset() {
+  const candelStore = useChartCandelStore();
+  const { candleWidth, candles } = storeToRefs(candelStore);
+
+  const totalCandleWidth = candleWidth.value + spacing.value;
+  const totalWidth = totalCandleWidth * candles.value.length * scale.value;
+
+  const minOffsetX = -(totalWidth - candleWidth.value * scale.value);
+  const maxOffsetX = candleWidth.value * scale.value;
+
+  if (offset.value.x < minOffsetX) {
+    offset.value.x = minOffsetX;
+  }
+  if (offset.value.x > maxOffsetX) {
+    offset.value.x = maxOffsetX;
+  }
+}
+
+function onPriceWheel(e) {
+  const mainChart = useChartMainStore();
+  const { drawChart } = mainChart;
+
+  e.preventDefault();
+  const zoomFactor = 1.1;
+  const delta = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
+
+  const centerY = props.height / 2;
+  const priceBefore = priceFromY(centerY, props.height, priceScale.value);
+
+  priceScale.value = Math.min(100, Math.max(0.01, priceScale.value * delta));
+
+  const priceAfter = priceFromY(centerY, props.height, priceScale.value);
+  centerPrice.value += priceBefore - priceAfter;
+
+  drawChart(
+    props.timeCtx,
+    priceCtx.value,
+    mainCtx.value,
+    props.width,
+    props.height,
+    mouse.value,
+    priceScale.value
+  );
+}
+
+function onPriceScaleDrag(e) {
+  const drag = useDragStore();
+  const { scalingPriceByDrag } = storeToRefs(drag);
+
+  if (!scalingPriceByDrag.value) return;
+
+  const dy = e.offsetY - lastMouse.value.y;
+
+  const zoomFactor = 1.038; // чувствительность
+  const delta = dy > 0 ? 1 / zoomFactor : zoomFactor;
+
+  const centerY = props.height / 2;
+
+  const priceBefore = priceFromY(centerY, props.height, priceScale.value);
+  priceScale.value = Math.max(0.01, Math.min(100, priceScale.value * delta));
+  const priceAfter = priceFromY(centerY, props.height, priceScale.value);
+
+  centerPrice.value += priceBefore - priceAfter;
+  lastMouse.value = { x: e.offsetX, y: e.offsetY };
+
+  drawChart(
+    props.timeCtx,
+    priceCtx.value,
+    mainCtx.value,
+    props.width,
+    props.height,
+    mouse.value,
+    priceScale.value
+  );
+}
+
+function startPriceScaleDrag(e) {
+  const drag = useDragStore();
+  const { scalingPriceByDrag } = storeToRefs(drag);
+  scalingPriceByDrag.value = true;
+  lastMouse.value = { x: e.offsetX, y: e.offsetY };
+}
 
 function onCanvasContextMenu(e) {
   const rect = mainCanvas.value.getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
 
-  if (isClickOnEMA(x, y, 5, props.height)) {
+  if (isClickOnEMA(x, y, 5, props.height, priceScale.value)) {
     e.preventDefault();
     console.log("hello - EMA clicked!");
     return;
@@ -126,7 +224,9 @@ function onCanvasContextMenu(e) {
     priceCtx.value,
     mainCtx.value,
     props.width,
-    props.height
+    props.height,
+    mouse.value,
+    priceScale.value
   );
 }
 
@@ -136,7 +236,9 @@ const handleResize = () => {
     priceCtx.value,
     mainCtx.value,
     props.width,
-    props.height
+    props.height,
+    mouse.value,
+    priceScale.value
   );
 };
 
@@ -150,7 +252,9 @@ watch([props.width, props.height], () => {
     priceCtx.value,
     mainCtx.value,
     props.width,
-    props.height
+    props.height,
+    mouse.value,
+    priceScale.value
   );
 });
 
@@ -181,14 +285,15 @@ onMounted(() => {
     priceCtx.value,
     mainCtx.value,
     props.width,
-    props.height
+    props.height,
+    mouse.value,
+    priceScale.value
   );
 });
 
 onUnmounted(() => {
   resizeEventBus.value.offResize(handleResize);
 });
-
 </script>
 <style scoped>
 .chart-wrapper {

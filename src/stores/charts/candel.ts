@@ -161,7 +161,7 @@ export const useChartCandelStore = defineStore("candelChart", () => {
     },
   ]);
 
-  function drawCandlesBodiesOnly(ctx, height:number) {
+  function drawCandlesBodiesOnly(ctx, height: number, priceScale: number) {
     const chartMainStore = useChartMainStore();
     const { spacing } = storeToRefs(chartMainStore);
     const priceStore = useChartPriceStore();
@@ -169,8 +169,8 @@ export const useChartCandelStore = defineStore("candelChart", () => {
 
     candles.value.forEach((c, i) => {
       const x = i * (candleWidth.value + spacing.value);
-      const openY = scaleYFromPrice(c.open, height);
-      const closeY = scaleYFromPrice(c.close, height);
+      const openY = scaleYFromPrice(c.open, height, priceScale);
+      const closeY = scaleYFromPrice(c.close, height, priceScale);
       const bodyTop = Math.min(openY, closeY);
       const bodyHeight = Math.abs(openY - closeY);
       const color = c.close >= c.open ? "#4caf50" : "#f44336";

@@ -1,13 +1,11 @@
-import { defineStore, storeToRefs } from "pinia";
+import { defineStore } from "pinia";
 import { ref } from "vue";
-import { useChartMainStore } from "./main";
 
 export const useDragStore = defineStore("drag", () => {
   const containerPosition = ref({ x: 0, y: 0 });
   const isDraggingContainer = ref(false);
   const dragStart = ref({ x: 0, y: 0 });
   const scalingPriceByDrag = ref(false);
-  const dragging = ref(false);
 
   function startContainerDrag(e) {
     if (e.button !== 0) return;
@@ -35,22 +33,13 @@ export const useDragStore = defineStore("drag", () => {
     document.removeEventListener("mouseup", stopContainerDrag);
   }
 
-  function startPriceScaleDrag(e) {
-    const mainCart = useChartMainStore();
-    const { lastMouse } = storeToRefs(mainCart);
-    scalingPriceByDrag.value = true;
-    lastMouse.value = { x: e.offsetX, y: e.offsetY };
-  }
-
   return {
     containerPosition,
-    dragging,
     isDraggingContainer,
     dragStart,
     scalingPriceByDrag,
     startContainerDrag,
     onContainerDrag,
     stopContainerDrag,
-    startPriceScaleDrag,
   };
 });
