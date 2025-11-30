@@ -38,40 +38,40 @@
     <div
       class="resizer resizer-top"
       :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
-      @mousedown="startResize('top', $event, width, height)"
+      @mousedown="startResize('top', $event)"
     ></div>
     <div
       class="resizer resizer-right"
       :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
-      @mousedown="startResize('right', $event, width, height)"
+      @mousedown="startResize('right', $event)"
     ></div>
     <div
       class="resizer resizer-bottom"
       :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
-      @mousedown="startResize('bottom', $event, width, height)"
+      @mousedown="startResize('bottom', $event)"
     ></div>
     <div
       class="resizer resizer-left"
-      @mousedown="startResize('left', $event, width, height)"
+      @mousedown="startResize('left', $event)"
     ></div>
 
     <div
       class="resizer resizer-top-left"
-      @mousedown="startResize('top-left', $event, width, height)"
+      @mousedown="startResize('top-left', $event)"
     ></div>
     <div
       class="resizer resizer-top-right"
       :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
-      @mousedown="startResize('top-right', $event, width, height)"
+      @mousedown="startResize('top-right', $event)"
     ></div>
     <div
       class="resizer resizer-bottom-left"
-      @mousedown="startResize('bottom-left', $event, width, height)"
+      @mousedown="startResize('bottom-left', $event)"
     ></div>
     <div
       class="resizer resizer-bottom-right"
       :style="{ right: -width - widthInstrumentsAndPrice - 8 + 'px' }"
-      @mousedown="startResize('bottom-right', $event, width, height)"
+      @mousedown="startResize('bottom-right', $event)"
     ></div>
   </div>
 </template>
@@ -79,19 +79,17 @@
 import { storeToRefs } from "pinia";
 import { ref, computed, watch, onMounted } from "vue";
 import { useDragStore } from "@/stores/charts/drag";
-import { useResizeStore } from "@/stores/charts/resize";
 import { useLevelStore } from "@/stores/instruments/level";
 import { Instruments, useInstrumentStore } from "@/stores/instruments/main";
 import Chart from "./Chart.vue";
 import { TIME_CANVAS_HEIGHT } from "@/stores/charts/time";
+import { resizeEventBus } from "@/eventBuses/resize-bus";
 
 const storeDrag = useDragStore();
 const { containerPosition } = storeToRefs(storeDrag);
 const { startContainerDrag } = storeDrag;
 const chartContainer = ref(null);
 const widthInstrumentsAndPrice = 160;
-const resizeStore = useResizeStore();
-// const { startResize } = resizeStore;
 const levelStore = useLevelStore();
 const { onSwitchInstrumentToLevels } = levelStore;
 const instrumentStore = useInstrumentStore();
@@ -195,12 +193,10 @@ function onResizeMove(e) {
 
 function stopResize(e) {
   isResizing.value = false;
-  document.removeEventListener("mousemove", (e) =>
-    onResizeMove(e)
-  );
+  document.removeEventListener("mousemove", (e) => onResizeMove(e));
   document.removeEventListener("mouseup", (e) => stopResize(e));
 
-  // drawChart();
+  resizeEventBus.value.emitResize();
 }
 
 watch([width, height], () => {

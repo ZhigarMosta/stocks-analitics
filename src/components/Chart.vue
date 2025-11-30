@@ -71,6 +71,7 @@
 </template>
 
 <script setup lang="ts">
+import { resizeEventBus } from "@/eventBuses/resize-bus";
 import { useChartCandelStore } from "@/stores/charts/candel";
 import { useDragStore } from "@/stores/charts/drag";
 import { useChartEmaStore } from "@/stores/charts/ema";
@@ -78,7 +79,7 @@ import { useChartMainStore } from "@/stores/charts/main";
 import { PRICE_CANVAS_WIDTH, useChartPriceStore } from "@/stores/charts/price";
 import { useInstrumentStore } from "@/stores/instruments/main";
 import { storeToRefs } from "pinia";
-import { onMounted, ref, Ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, Ref, watch } from "vue";
 
 const props = defineProps<{
   timeCtx: Ref;
@@ -129,7 +130,16 @@ function onCanvasContextMenu(e) {
   );
 }
 
-// watch([scale, offset], drawChart);
+const handleResize = () => {
+  drawChart(
+    props.timeCtx.value,
+    priceCtx.value,
+    mainCtx.value,
+    props.width,
+    props.height
+  );
+};
+
 watch([props.width, props.height], () => {
   if (mainCanvas.value) mainCanvas.value.width = props.width;
   if (mainCanvas.value) mainCanvas.value.height = props.height;
@@ -164,6 +174,8 @@ onMounted(() => {
   const totalCandlesWidth = totalCandleWidth * candles.value.length;
   offset.value.x = -(totalCandlesWidth * scale.value) + props.width * 0.75;
 
+  resizeEventBus.value.onResize(handleResize);
+
   drawChart(
     props.timeCtx,
     priceCtx.value,
@@ -172,6 +184,11 @@ onMounted(() => {
     props.height
   );
 });
+
+onUnmounted(() => {
+  resizeEventBus.value.offResize(handleResize);
+});
+
 </script>
 <style scoped>
 .chart-wrapper {
