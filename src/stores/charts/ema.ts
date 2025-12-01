@@ -8,12 +8,11 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     ctx: CanvasRenderingContext2D,
     isIndicatorArea = false,
     height: number,
-    priceScale: number
+    priceScale: number,
+    spacing: number
   ) {
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
-    const mainStore = useChartMainStore();
-    const { spacing } = storeToRefs(mainStore);
     const mainPrice = useChartPriceStore();
     const { scaleYFromPrice } = mainPrice;
 
@@ -24,7 +23,7 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     ctx.strokeStyle = isIndicatorArea ? "#FF6B6B" : "#000";
     ctx.beginPath();
 
-    const stepX = candleWidth.value + spacing.value;
+    const stepX = candleWidth.value + spacing;
 
     candles.value.forEach((candle, i) => {
       const x = i * stepX + candleWidth.value / 2;
@@ -81,18 +80,19 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     y,
     threshold = 5,
     height: number,
-    priceScale: number
+    priceScale: number,
+    spacing: number
   ) {
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
     const mainPrice = useChartPriceStore();
     const { scaleYFromPrice } = mainPrice;
     const mainStore = useChartMainStore();
-    const { spacing, scale, offset } = storeToRefs(mainStore);
+    const { scale, offset } = storeToRefs(mainStore);
 
     if (!candles.value.length) return false;
 
-    const stepX = candleWidth.value + spacing.value;
+    const stepX = candleWidth.value + spacing;
 
     for (let i = 0; i < candles.value.length - 1; i++) {
       const currentCandle = candles.value[i];

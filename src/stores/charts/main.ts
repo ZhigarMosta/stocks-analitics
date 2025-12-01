@@ -10,18 +10,22 @@ import { useChartTimeStore } from "./time";
 export const TIME_CANVAS_HEIGHT = 40;
 
 export const useChartMainStore = defineStore("chartMain", () => {
-  const spacing = ref(4);
   const offset = ref({ x: 0, y: 0 });
   const scale = ref(1);
 
-  function drawWicksUnscaled(ctx, height: number, priceScale: number) {
+  function drawWicksUnscaled(
+    ctx,
+    height: number,
+    priceScale: number,
+    spacing: number
+  ) {
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
     const priceStore = useChartPriceStore();
     const { scaleYFromPrice } = priceStore;
 
     candles.value.forEach((c, i) => {
-      const x = i * (candleWidth.value + spacing.value) + candleWidth.value / 2;
+      const x = i * (candleWidth.value + spacing) + candleWidth.value / 2;
       const highY = scaleYFromPrice(c.high, height, priceScale);
       const lowY = scaleYFromPrice(c.low, height, priceScale);
       const color = c.close >= c.open ? "#4caf50" : "#f44336";
@@ -42,7 +46,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
     width: number,
     height: number,
     mouse: { x: number; y: number },
-    priceScale: number
+    priceScale: number,
+    spacing: number
   ) {
     const levelStore = useLevelStore();
     const { drawLevels } = levelStore;
@@ -66,91 +71,25 @@ export const useChartMainStore = defineStore("chartMain", () => {
     context.scale(scale.value, 1);
 
     drawLevels(context, width, height, priceScale);
-    drawCandlesBodiesOnly(context, height, priceScale);
-    drawVolumes(context, height);
-    drawEMA(context, false, height, priceScale);
+    drawCandlesBodiesOnly(context, height, priceScale, spacing);
+    drawVolumes(context, height, spacing);
+    drawEMA(context, false, height, priceScale, spacing);
 
     context.restore();
 
-    drawHoverDate(context, height, width, mouse);
-    drawWicksUnscaled(context, height, priceScale);
+    drawHoverDate(context, height, width, mouse, spacing);
+    drawWicksUnscaled(context, height, priceScale, spacing);
     drawHoverLine(context, width, height, mouse, priceScale);
 
     drawPriceScale(priceCtx, height, mouse, priceScale);
-    drawHoverPriceLine(context, width, height, mouse, priceScale);
-    drawHoverHighLowLine(context, height, priceScale, mouse);
+    drawHoverPriceLine(context, width, height, mouse, priceScale, spacing);
+    drawHoverHighLowLine(context, height, priceScale, mouse, spacing);
     drawTimeAxis(width, candleWidth, spacing, offset, scale, candles, timeCtx);
   }
 
-  function onMainWheel(
-    e: WheelEvent,
-    timeCtx: any,
-    priceCtx: any,
-    mainCtx: any,
-    width: number,
-    height: number,
-    mouse: { x: number; y: number },
-    priceScale: number
-  ) {
-    const candelStore = useChartCandelStore();
-    const { candleWidth, candles } = storeToRefs(candelStore);
-
-    e.preventDefault();
-    const zoomFactor = 1.1;
-    const delta = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
-
-    if (e.ctrlKey) {
-      const worldXBeforeZoom = (e.offsetX - offset.value.x) / scale.value;
-      scale.value = Math.max(0.1, Math.min(20, scale.value * delta));
-      const worldXAfterZoom = (e.offsetX - offset.value.x) / scale.value;
-      const dx = (worldXAfterZoom - worldXBeforeZoom) * scale.value;
-      offset.value.x += dx;
-    } else {
-      const pivotX = width;
-      const worldPivotBefore = (pivotX - offset.value.x) / scale.value;
-
-      candleWidth.value = Math.max(2, candleWidth.value * delta);
-      spacing.value = Math.max(1, spacing.value * delta);
-      const newTotalWidth = candleWidth.value + spacing.value;
-
-      const worldPivotAfter = (pivotX - offset.value.x) / scale.value;
-      const deltaWorldPivot = worldPivotAfter - worldPivotBefore;
-      offset.value.x += deltaWorldPivot * scale.value;
-
-      const totalGraphWidth =
-        candles.value.length * newTotalWidth * scale.value;
-      const minOffsetX = Math.min(width - totalGraphWidth, 0);
-      offset.value.x = Math.max(minOffsetX, offset.value.x);
-    }
-
-    clampHorizontalOffset();
-
-    drawChart(timeCtx, priceCtx, mainCtx, width, height, mouse, priceScale);
-  }
-
-  function clampHorizontalOffset() {
-    const candelStore = useChartCandelStore();
-    const { candleWidth, candles } = storeToRefs(candelStore);
-
-    const totalCandleWidth = candleWidth.value + spacing.value;
-    const totalWidth = totalCandleWidth * candles.value.length * scale.value;
-
-    const minOffsetX = -(totalWidth - candleWidth.value * scale.value);
-    const maxOffsetX = candleWidth.value * scale.value;
-
-    if (offset.value.x < minOffsetX) {
-      offset.value.x = minOffsetX;
-    }
-    if (offset.value.x > maxOffsetX) {
-      offset.value.x = maxOffsetX;
-    }
-  }
-
   return {
-    spacing,
     offset,
     scale,
     drawChart,
-    onMainWheel,
   };
 });

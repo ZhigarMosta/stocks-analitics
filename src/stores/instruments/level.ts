@@ -15,7 +15,8 @@ export const useLevelStore = defineStore("level", () => {
     width: number,
     height: number,
     mouse: { x: number; y: number },
-    priceScale: number
+    priceScale: number,
+    spacing: number
   ) {
     const priceStore = useChartPriceStore();
     const { priceFromY } = priceStore;
@@ -25,7 +26,16 @@ export const useLevelStore = defineStore("level", () => {
     e.preventDefault();
     levels.value.push(priceFromY(e.offsetY, height, priceScale));
 
-    drawChart(timeCtx, priceCtx, mainCtx, width, height, mouse, priceScale);
+    drawChart(
+      timeCtx,
+      priceCtx,
+      mainCtx,
+      width,
+      height,
+      mouse,
+      priceScale,
+      spacing
+    );
   }
 
   function drawLevels(ctx, width: number, height: number, priceScale: number) {

@@ -1,11 +1,8 @@
 import { defineStore, storeToRefs } from "pinia";
-import { useChartMainStore } from "./main";
 import { useChartCandelStore } from "./candel";
 
 export const useChartVolumeStore = defineStore("chartVolume", () => {
-  function drawVolumes(ctx, height: number) {
-    const chartMain = useChartMainStore();
-    const { spacing } = storeToRefs(chartMain);
+  function drawVolumes(ctx, height: number, spacing: number) {
     const chartCandels = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(chartCandels);
 
@@ -14,7 +11,7 @@ export const useChartVolumeStore = defineStore("chartVolume", () => {
     const volumeTop = height - volumeAreaHeight;
 
     candles.value.forEach((c, i) => {
-      const x = i * (candleWidth.value + spacing.value);
+      const x = i * (candleWidth.value + spacing);
       const barWidth = candleWidth.value;
       const barHeight = (c.volume / maxVolume) * (volumeAreaHeight - 20);
 

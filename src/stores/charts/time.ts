@@ -10,7 +10,7 @@ export const useChartTimeStore = defineStore("chartTime", () => {
   function drawTimeAxis(
     width: number,
     candleWidth: Ref,
-    spacing: Ref,
+    spacing: number,
     offset: Ref,
     scale: Ref,
     candles: Ref,
@@ -25,7 +25,7 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     ctx.fillStyle = "#000";
     ctx.textAlign = "center";
 
-    const candleStep = candleWidth.value + spacing.value;
+    const candleStep = candleWidth.value + spacing;
     const visibleStart = -offset.value.x / scale.value;
     const visibleEnd = (width - offset.value.x) / scale.value;
 
@@ -51,17 +51,18 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     ctx,
     height: number,
     width: number,
-    mouse: { x: number; y: number }
+    mouse: { x: number; y: number },
+    spacing: number
   ) {
     const mainStore = useChartMainStore();
-    const { offset, spacing, scale } = storeToRefs(mainStore);
+    const { offset, scale } = storeToRefs(mainStore);
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
 
     if (!candles.value.length) return;
 
     const relativeMouseX = (mouse.x - offset.value.x) / scale.value;
-    const totalCandleWidth = candleWidth.value + spacing.value;
+    const totalCandleWidth = candleWidth.value + spacing;
     const index = Math.floor(relativeMouseX / totalCandleWidth);
 
     const candle = candles.value[index];
@@ -91,10 +92,11 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     ctx,
     height: number,
     priceScale: number,
-    mouse: { x: number; y: number }
+    mouse: { x: number; y: number },
+    spacing: number
   ) {
     const mainStore = useChartMainStore();
-    const { offset, spacing, scale } = storeToRefs(mainStore);
+    const { offset, scale } = storeToRefs(mainStore);
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
     const priceStore = useChartPriceStore();
@@ -103,7 +105,7 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     if (!candles.value.length) return;
 
     const relativeMouseX = (mouse.x - offset.value.x) / scale.value;
-    const totalCandleWidth = candleWidth.value + spacing.value;
+    const totalCandleWidth = candleWidth.value + spacing;
     const index = Math.floor(relativeMouseX / totalCandleWidth);
 
     const candle = candles.value[index];

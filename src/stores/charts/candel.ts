@@ -1,6 +1,5 @@
-import { defineStore, storeToRefs } from "pinia";
+import { defineStore } from "pinia";
 import { ref } from "vue";
-import { useChartMainStore } from "./main";
 import { useChartPriceStore } from "./price";
 
 export const useChartCandelStore = defineStore("candelChart", () => {
@@ -161,14 +160,17 @@ export const useChartCandelStore = defineStore("candelChart", () => {
     },
   ]);
 
-  function drawCandlesBodiesOnly(ctx, height: number, priceScale: number) {
-    const chartMainStore = useChartMainStore();
-    const { spacing } = storeToRefs(chartMainStore);
+  function drawCandlesBodiesOnly(
+    ctx,
+    height: number,
+    priceScale: number,
+    spacing: number
+  ) {
     const priceStore = useChartPriceStore();
     const { scaleYFromPrice } = priceStore;
 
     candles.value.forEach((c, i) => {
-      const x = i * (candleWidth.value + spacing.value);
+      const x = i * (candleWidth.value + spacing);
       const openY = scaleYFromPrice(c.open, height, priceScale);
       const closeY = scaleYFromPrice(c.close, height, priceScale);
       const bodyTop = Math.min(openY, closeY);

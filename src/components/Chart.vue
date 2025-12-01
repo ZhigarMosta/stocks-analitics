@@ -11,19 +11,7 @@
           @mouseup="endPan"
           @mouseleave="endPan"
           @mousemove="onMouseMove"
-          @wheel="
-            (e) =>
-              onMainWheel(
-                e,
-                timeCtx,
-                priceCtx,
-                mainCtx,
-                props.width,
-                props.height,
-                mouse,
-                priceScale
-              )
-          "
+          @wheel="onMainWheel"
           @contextmenu.prevent="onCanvasContextMenu"
         />
         <canvas
@@ -60,8 +48,8 @@ const props = defineProps<{
 }>();
 
 const storeChartMain = useChartMainStore();
-const { spacing, offset, scale } = storeToRefs(storeChartMain);
-const { drawChart, onMainWheel } = storeChartMain;
+const { offset, scale } = storeToRefs(storeChartMain);
+const { drawChart } = storeChartMain;
 const priceChart = useChartPriceStore();
 const { centerPrice, priceRange } = storeToRefs(priceChart);
 const { priceFromY, endPriceScaleDrag } = priceChart;
@@ -82,6 +70,7 @@ const mainCtx = ref(null);
 const dragging = ref(false);
 const lastMouse = ref({ x: 0, y: 0 });
 const mouse = ref({ x: 0, y: 0 });
+const spacing = ref(4);
 
 function startPan(e) {
   dragging.value = true;
@@ -90,6 +79,51 @@ function startPan(e) {
 
 function endPan() {
   dragging.value = false;
+}
+
+function onMainWheel(e: WheelEvent) {
+  const candelStore = useChartCandelStore();
+  const { candleWidth, candles } = storeToRefs(candelStore);
+
+  e.preventDefault();
+  const zoomFactor = 1.1;
+  const delta = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
+
+  if (e.ctrlKey) {
+    const worldXBeforeZoom = (e.offsetX - offset.value.x) / scale.value;
+    scale.value = Math.max(0.1, Math.min(20, scale.value * delta));
+    const worldXAfterZoom = (e.offsetX - offset.value.x) / scale.value;
+    const dx = (worldXAfterZoom - worldXBeforeZoom) * scale.value;
+    offset.value.x += dx;
+  } else {
+    const pivotX = props.width;
+    const worldPivotBefore = (pivotX - offset.value.x) / scale.value;
+
+    candleWidth.value = Math.max(2, candleWidth.value * delta);
+    spacing.value = Math.max(1, spacing.value * delta);
+    const newTotalWidth = candleWidth.value + spacing.value;
+
+    const worldPivotAfter = (pivotX - offset.value.x) / scale.value;
+    const deltaWorldPivot = worldPivotAfter - worldPivotBefore;
+    offset.value.x += deltaWorldPivot * scale.value;
+
+    const totalGraphWidth = candles.value.length * newTotalWidth * scale.value;
+    const minOffsetX = Math.min(props.width - totalGraphWidth, 0);
+    offset.value.x = Math.max(minOffsetX, offset.value.x);
+  }
+
+  clampHorizontalOffset();
+
+  drawChart(
+    props.timeCtx,
+    priceCtx.value,
+    mainCtx.value,
+    props.width,
+    props.height,
+    mouse.value,
+    priceScale.value,
+    spacing.value
+  );
 }
 
 function onMouseMove(e) {
@@ -120,7 +154,8 @@ function onMouseMove(e) {
     props.width,
     props.height,
     mouse.value,
-    priceScale.value
+    priceScale.value,
+    spacing.value
   );
 }
 
@@ -165,7 +200,8 @@ function onPriceWheel(e) {
     props.width,
     props.height,
     mouse.value,
-    priceScale.value
+    priceScale.value,
+    spacing.value
   );
 }
 
@@ -196,7 +232,8 @@ function onPriceScaleDrag(e) {
     props.width,
     props.height,
     mouse.value,
-    priceScale.value
+    priceScale.value,
+    spacing.value
   );
 }
 
@@ -212,7 +249,7 @@ function onCanvasContextMenu(e) {
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
 
-  if (isClickOnEMA(x, y, 5, props.height, priceScale.value)) {
+  if (isClickOnEMA(x, y, 5, props.height, priceScale.value, spacing.value)) {
     e.preventDefault();
     console.log("hello - EMA clicked!");
     return;
@@ -226,7 +263,8 @@ function onCanvasContextMenu(e) {
     props.width,
     props.height,
     mouse.value,
-    priceScale.value
+    priceScale.value,
+    spacing.value
   );
 }
 
@@ -238,7 +276,8 @@ const handleResize = () => {
     props.width,
     props.height,
     mouse.value,
-    priceScale.value
+    priceScale.value,
+    spacing.value
   );
 };
 
@@ -271,7 +310,8 @@ onMounted(() => {
     props.width,
     props.height,
     mouse.value,
-    priceScale.value
+    priceScale.value,
+    spacing.value
   );
 });
 
