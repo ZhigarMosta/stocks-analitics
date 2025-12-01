@@ -164,15 +164,16 @@ export const useChartCandelStore = defineStore("candelChart", () => {
     ctx,
     height: number,
     priceScale: number,
-    spacing: number
+    spacing: number,
+    offset: { x: number; y: number }
   ) {
     const priceStore = useChartPriceStore();
     const { scaleYFromPrice } = priceStore;
 
     candles.value.forEach((c, i) => {
       const x = i * (candleWidth.value + spacing);
-      const openY = scaleYFromPrice(c.open, height, priceScale);
-      const closeY = scaleYFromPrice(c.close, height, priceScale);
+      const openY = scaleYFromPrice(c.open, height, priceScale, offset);
+      const closeY = scaleYFromPrice(c.close, height, priceScale, offset);
       const bodyTop = Math.min(openY, closeY);
       const bodyHeight = Math.abs(openY - closeY);
       const color = c.close >= c.open ? "#4caf50" : "#f44336";
@@ -181,6 +182,7 @@ export const useChartCandelStore = defineStore("candelChart", () => {
       ctx.fillRect(x, bodyTop, candleWidth.value, Math.max(1, bodyHeight));
     });
   }
+  
   return {
     candleWidth,
     candles,

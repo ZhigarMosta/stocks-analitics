@@ -48,7 +48,7 @@ const props = defineProps<{
 }>();
 
 const storeChartMain = useChartMainStore();
-const { offset, scale } = storeToRefs(storeChartMain);
+const { scale } = storeToRefs(storeChartMain);
 const { drawChart } = storeChartMain;
 const priceChart = useChartPriceStore();
 const { centerPrice, priceRange } = storeToRefs(priceChart);
@@ -71,6 +71,7 @@ const dragging = ref(false);
 const lastMouse = ref({ x: 0, y: 0 });
 const mouse = ref({ x: 0, y: 0 });
 const spacing = ref(4);
+const offset = ref({ x: 0, y: 0 });
 
 function startPan(e) {
   dragging.value = true;
@@ -122,7 +123,8 @@ function onMainWheel(e: WheelEvent) {
     props.height,
     mouse.value,
     priceScale.value,
-    spacing.value
+    spacing.value,
+    offset.value
   );
 }
 
@@ -155,7 +157,8 @@ function onMouseMove(e) {
     props.height,
     mouse.value,
     priceScale.value,
-    spacing.value
+    spacing.value,
+    offset.value
   );
 }
 
@@ -186,11 +189,21 @@ function onPriceWheel(e) {
   const delta = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
 
   const centerY = props.height / 2;
-  const priceBefore = priceFromY(centerY, props.height, priceScale.value);
+  const priceBefore = priceFromY(
+    centerY,
+    props.height,
+    priceScale.value,
+    offset.value
+  );
 
   priceScale.value = Math.min(100, Math.max(0.01, priceScale.value * delta));
 
-  const priceAfter = priceFromY(centerY, props.height, priceScale.value);
+  const priceAfter = priceFromY(
+    centerY,
+    props.height,
+    priceScale.value,
+    offset.value
+  );
   centerPrice.value += priceBefore - priceAfter;
 
   drawChart(
@@ -201,7 +214,8 @@ function onPriceWheel(e) {
     props.height,
     mouse.value,
     priceScale.value,
-    spacing.value
+    spacing.value,
+    offset.value
   );
 }
 
@@ -218,9 +232,19 @@ function onPriceScaleDrag(e) {
 
   const centerY = props.height / 2;
 
-  const priceBefore = priceFromY(centerY, props.height, priceScale.value);
+  const priceBefore = priceFromY(
+    centerY,
+    props.height,
+    priceScale.value,
+    offset.value
+  );
   priceScale.value = Math.max(0.01, Math.min(100, priceScale.value * delta));
-  const priceAfter = priceFromY(centerY, props.height, priceScale.value);
+  const priceAfter = priceFromY(
+    centerY,
+    props.height,
+    priceScale.value,
+    offset.value
+  );
 
   centerPrice.value += priceBefore - priceAfter;
   lastMouse.value = { x: e.offsetX, y: e.offsetY };
@@ -233,7 +257,8 @@ function onPriceScaleDrag(e) {
     props.height,
     mouse.value,
     priceScale.value,
-    spacing.value
+    spacing.value,
+    offset.value
   );
 }
 
@@ -249,7 +274,17 @@ function onCanvasContextMenu(e) {
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
 
-  if (isClickOnEMA(x, y, 5, props.height, priceScale.value, spacing.value)) {
+  if (
+    isClickOnEMA(
+      x,
+      y,
+      5,
+      props.height,
+      priceScale.value,
+      spacing.value,
+      offset.value
+    )
+  ) {
     e.preventDefault();
     console.log("hello - EMA clicked!");
     return;
@@ -264,7 +299,8 @@ function onCanvasContextMenu(e) {
     props.height,
     mouse.value,
     priceScale.value,
-    spacing.value
+    spacing.value,
+    offset.value
   );
 }
 
@@ -277,7 +313,8 @@ const handleResize = () => {
     props.height,
     mouse.value,
     priceScale.value,
-    spacing.value
+    spacing.value,
+    offset.value
   );
 };
 
@@ -311,7 +348,8 @@ onMounted(() => {
     props.height,
     mouse.value,
     priceScale.value,
-    spacing.value
+    spacing.value,
+    offset.value
   );
 });
 

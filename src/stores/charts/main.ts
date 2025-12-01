@@ -10,14 +10,14 @@ import { useChartTimeStore } from "./time";
 export const TIME_CANVAS_HEIGHT = 40;
 
 export const useChartMainStore = defineStore("chartMain", () => {
-  const offset = ref({ x: 0, y: 0 });
   const scale = ref(1);
 
   function drawWicksUnscaled(
     ctx,
     height: number,
     priceScale: number,
-    spacing: number
+    spacing: number,
+    offset: { x: number; y: number }
   ) {
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
@@ -26,15 +26,15 @@ export const useChartMainStore = defineStore("chartMain", () => {
 
     candles.value.forEach((c, i) => {
       const x = i * (candleWidth.value + spacing) + candleWidth.value / 2;
-      const highY = scaleYFromPrice(c.high, height, priceScale);
-      const lowY = scaleYFromPrice(c.low, height, priceScale);
+      const highY = scaleYFromPrice(c.high, height, priceScale, offset);
+      const lowY = scaleYFromPrice(c.low, height, priceScale, offset);
       const color = c.close >= c.open ? "#4caf50" : "#f44336";
 
       ctx.strokeStyle = color;
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(x * scale.value + offset.value.x, highY);
-      ctx.lineTo(x * scale.value + offset.value.x, lowY);
+      ctx.moveTo(x * scale.value + offset.x, highY);
+      ctx.lineTo(x * scale.value + offset.x, lowY);
       ctx.stroke();
     });
   }
@@ -47,7 +47,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
     height: number,
     mouse: { x: number; y: number },
     priceScale: number,
-    spacing: number
+    spacing: number,
+    offset: { x: number; y: number }
   ) {
     const levelStore = useLevelStore();
     const { drawLevels } = levelStore;
@@ -67,28 +68,35 @@ export const useChartMainStore = defineStore("chartMain", () => {
     context.clearRect(0, 0, width, height);
 
     context.save();
-    context.translate(offset.value.x, 0);
+    context.translate(offset.x, 0);
     context.scale(scale.value, 1);
 
-    drawLevels(context, width, height, priceScale);
-    drawCandlesBodiesOnly(context, height, priceScale, spacing);
+    drawLevels(context, width, height, priceScale, offset);
+    drawCandlesBodiesOnly(context, height, priceScale, spacing, offset);
     drawVolumes(context, height, spacing);
-    drawEMA(context, false, height, priceScale, spacing);
+    drawEMA(context, false, height, priceScale, spacing, offset);
 
     context.restore();
 
-    drawHoverDate(context, height, width, mouse, spacing);
-    drawWicksUnscaled(context, height, priceScale, spacing);
-    drawHoverLine(context, width, height, mouse, priceScale);
+    drawHoverDate(context, height, width, mouse, spacing, offset);
+    drawWicksUnscaled(context, height, priceScale, spacing, offset);
+    drawHoverLine(context, width, height, mouse, priceScale, offset);
 
-    drawPriceScale(priceCtx, height, mouse, priceScale);
-    drawHoverPriceLine(context, width, height, mouse, priceScale, spacing);
-    drawHoverHighLowLine(context, height, priceScale, mouse, spacing);
+    drawPriceScale(priceCtx, height, mouse, priceScale, offset);
+    drawHoverPriceLine(
+      context,
+      width,
+      height,
+      mouse,
+      priceScale,
+      spacing,
+      offset
+    );
+    drawHoverHighLowLine(context, height, priceScale, mouse, spacing, offset);
     drawTimeAxis(width, candleWidth, spacing, offset, scale, candles, timeCtx);
   }
 
   return {
-    offset,
     scale,
     drawChart,
   };

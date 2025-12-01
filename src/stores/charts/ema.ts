@@ -9,7 +9,8 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     isIndicatorArea = false,
     height: number,
     priceScale: number,
-    spacing: number
+    spacing: number,
+    offset: { x: number; y: number }
   ) {
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
@@ -29,7 +30,7 @@ export const useChartEmaStore = defineStore("chartEma", () => {
       const x = i * stepX + candleWidth.value / 2;
       let y;
 
-      y = scaleYFromPrice(candle.close, height, priceScale);
+      y = scaleYFromPrice(candle.close, height, priceScale, offset);
 
       if (i === 0) {
         ctx.moveTo(x, y);
@@ -81,14 +82,15 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     threshold = 5,
     height: number,
     priceScale: number,
-    spacing: number
+    spacing: number,
+    offset: { x: number; y: number }
   ) {
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
     const mainPrice = useChartPriceStore();
     const { scaleYFromPrice } = mainPrice;
     const mainStore = useChartMainStore();
-    const { scale, offset } = storeToRefs(mainStore);
+    const { scale } = storeToRefs(mainStore);
 
     if (!candles.value.length) return false;
 
@@ -99,13 +101,18 @@ export const useChartEmaStore = defineStore("chartEma", () => {
       const nextCandle = candles.value[i + 1];
 
       const x1 = i * stepX + candleWidth.value / 2;
-      const y1 = scaleYFromPrice(currentCandle.close, height, priceScale);
+      const y1 = scaleYFromPrice(
+        currentCandle.close,
+        height,
+        priceScale,
+        offset
+      );
 
       const x2 = (i + 1) * stepX + candleWidth.value / 2;
-      const y2 = scaleYFromPrice(nextCandle.close, height, priceScale);
+      const y2 = scaleYFromPrice(nextCandle.close, height, priceScale, offset);
 
-      const transformedX1 = x1 * scale.value + offset.value.x;
-      const transformedX2 = x2 * scale.value + offset.value.x;
+      const transformedX1 = x1 * scale.value + offset.x;
+      const transformedX2 = x2 * scale.value + offset.x;
 
       if (
         isPointNearLine(x, y, transformedX1, y1, transformedX2, y2, threshold)

@@ -15,7 +15,8 @@ export const useInstrumentStore = defineStore("instrument", () => {
     height: number,
     mouse: { x: number; y: number },
     priceScale: number,
-    spacing: number
+    spacing: number,
+    offset: { x: number; y: number }
   ) {
     const levelStore = useLevelStore();
     const { addLevls } = levelStore;
@@ -29,7 +30,8 @@ export const useInstrumentStore = defineStore("instrument", () => {
         height,
         mouse,
         priceScale,
-        spacing
+        spacing,
+        offset
       );
     }
   }
