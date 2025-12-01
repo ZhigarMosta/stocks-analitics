@@ -10,14 +10,13 @@ import { useChartTimeStore } from "./time";
 export const TIME_CANVAS_HEIGHT = 40;
 
 export const useChartMainStore = defineStore("chartMain", () => {
-  const scale = ref(1);
-
   function drawWicksUnscaled(
     ctx,
     height: number,
     priceScale: number,
     spacing: number,
-    offset: { x: number; y: number }
+    offset: { x: number; y: number },
+    scale: number
   ) {
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
@@ -33,8 +32,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
       ctx.strokeStyle = color;
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(x * scale.value + offset.x, highY);
-      ctx.lineTo(x * scale.value + offset.x, lowY);
+      ctx.moveTo(x * scale + offset.x, highY);
+      ctx.lineTo(x * scale + offset.x, lowY);
       ctx.stroke();
     });
   }
@@ -48,7 +47,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
     mouse: { x: number; y: number },
     priceScale: number,
     spacing: number,
-    offset: { x: number; y: number }
+    offset: { x: number; y: number },
+    scale: number
   ) {
     const levelStore = useLevelStore();
     const { drawLevels } = levelStore;
@@ -69,7 +69,7 @@ export const useChartMainStore = defineStore("chartMain", () => {
 
     context.save();
     context.translate(offset.x, 0);
-    context.scale(scale.value, 1);
+    context.scale(scale, 1);
 
     drawLevels(context, width, height, priceScale, offset);
     drawCandlesBodiesOnly(context, height, priceScale, spacing, offset);
@@ -78,8 +78,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
 
     context.restore();
 
-    drawHoverDate(context, height, width, mouse, spacing, offset);
-    drawWicksUnscaled(context, height, priceScale, spacing, offset);
+    drawHoverDate(context, height, width, mouse, spacing, offset, scale);
+    drawWicksUnscaled(context, height, priceScale, spacing, offset, scale);
     drawHoverLine(context, width, height, mouse, priceScale, offset);
 
     drawPriceScale(priceCtx, height, mouse, priceScale, offset);
@@ -90,14 +90,22 @@ export const useChartMainStore = defineStore("chartMain", () => {
       mouse,
       priceScale,
       spacing,
-      offset
+      offset,
+      scale
     );
-    drawHoverHighLowLine(context, height, priceScale, mouse, spacing, offset);
+    drawHoverHighLowLine(
+      context,
+      height,
+      priceScale,
+      mouse,
+      spacing,
+      offset,
+      scale
+    );
     drawTimeAxis(width, candleWidth, spacing, offset, scale, candles, timeCtx);
   }
 
   return {
-    scale,
     drawChart,
   };
 });

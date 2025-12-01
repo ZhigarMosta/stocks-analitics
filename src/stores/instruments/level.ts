@@ -17,7 +17,8 @@ export const useLevelStore = defineStore("level", () => {
     mouse: { x: number; y: number },
     priceScale: number,
     spacing: number,
-    offset: { x: number; y: number }
+    offset: { x: number; y: number },
+    scale: number
   ) {
     const priceStore = useChartPriceStore();
     const { priceFromY } = priceStore;
@@ -36,7 +37,8 @@ export const useLevelStore = defineStore("level", () => {
       mouse,
       priceScale,
       spacing,
-      offset
+      offset,
+      scale
     );
   }
 

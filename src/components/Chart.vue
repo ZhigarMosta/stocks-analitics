@@ -48,7 +48,6 @@ const props = defineProps<{
 }>();
 
 const storeChartMain = useChartMainStore();
-const { scale } = storeToRefs(storeChartMain);
 const { drawChart } = storeChartMain;
 const priceChart = useChartPriceStore();
 const { centerPrice, priceRange } = storeToRefs(priceChart);
@@ -72,6 +71,7 @@ const lastMouse = ref({ x: 0, y: 0 });
 const mouse = ref({ x: 0, y: 0 });
 const spacing = ref(4);
 const offset = ref({ x: 0, y: 0 });
+const scale = ref(1);
 
 function startPan(e) {
   dragging.value = true;
@@ -124,7 +124,8 @@ function onMainWheel(e: WheelEvent) {
     mouse.value,
     priceScale.value,
     spacing.value,
-    offset.value
+    offset.value,
+    scale.value
   );
 }
 
@@ -158,7 +159,8 @@ function onMouseMove(e) {
     mouse.value,
     priceScale.value,
     spacing.value,
-    offset.value
+    offset.value,
+    scale.value
   );
 }
 
@@ -215,7 +217,8 @@ function onPriceWheel(e) {
     mouse.value,
     priceScale.value,
     spacing.value,
-    offset.value
+    offset.value,
+    scale.value
   );
 }
 
@@ -258,7 +261,8 @@ function onPriceScaleDrag(e) {
     mouse.value,
     priceScale.value,
     spacing.value,
-    offset.value
+    offset.value,
+    scale.value
   );
 }
 
@@ -282,7 +286,8 @@ function onCanvasContextMenu(e) {
       props.height,
       priceScale.value,
       spacing.value,
-      offset.value
+      offset.value,
+      scale.value
     )
   ) {
     e.preventDefault();
@@ -300,7 +305,8 @@ function onCanvasContextMenu(e) {
     mouse.value,
     priceScale.value,
     spacing.value,
-    offset.value
+    offset.value,
+    scale.value
   );
 }
 
@@ -314,7 +320,8 @@ const handleResize = () => {
     mouse.value,
     priceScale.value,
     spacing.value,
-    offset.value
+    offset.value,
+    scale.value
   );
 };
 
@@ -349,7 +356,8 @@ onMounted(() => {
     mouse.value,
     priceScale.value,
     spacing.value,
-    offset.value
+    offset.value,
+    scale.value
   );
 });
 

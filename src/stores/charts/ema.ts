@@ -83,14 +83,13 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     height: number,
     priceScale: number,
     spacing: number,
-    offset: { x: number; y: number }
+    offset: { x: number; y: number },
+    scale: number
   ) {
     const candelStore = useChartCandelStore();
     const { candles, candleWidth } = storeToRefs(candelStore);
     const mainPrice = useChartPriceStore();
     const { scaleYFromPrice } = mainPrice;
-    const mainStore = useChartMainStore();
-    const { scale } = storeToRefs(mainStore);
 
     if (!candles.value.length) return false;
 
@@ -111,8 +110,8 @@ export const useChartEmaStore = defineStore("chartEma", () => {
       const x2 = (i + 1) * stepX + candleWidth.value / 2;
       const y2 = scaleYFromPrice(nextCandle.close, height, priceScale, offset);
 
-      const transformedX1 = x1 * scale.value + offset.x;
-      const transformedX2 = x2 * scale.value + offset.x;
+      const transformedX1 = x1 * scale + offset.x;
+      const transformedX2 = x2 * scale + offset.x;
 
       if (
         isPointNearLine(x, y, transformedX1, y1, transformedX2, y2, threshold)
