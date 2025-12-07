@@ -78,7 +78,6 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import { ref, computed, watch, onMounted } from "vue";
-import { useDragStore } from "@/stores/charts/drag";
 import { useLevelStore } from "@/stores/instruments/level";
 import { Instruments, useInstrumentStore } from "@/stores/instruments/main";
 import Chart from "./Chart.vue";
@@ -125,9 +124,6 @@ function startResize(direction, e) {
 }
 
 function onResizeMove(e) {
-  const storeDrag = useDragStore();
-  const { containerPosition } = storeToRefs(storeDrag);
-
   if (!isResizing.value) return;
 
   const dx = e.clientX - resizeStart.value.x;

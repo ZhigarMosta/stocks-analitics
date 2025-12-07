@@ -33,7 +33,6 @@
 <script setup lang="ts">
 import { resizeEventBus } from "@/eventBuses/resize-bus";
 import { useChartCandelStore } from "@/stores/charts/candel";
-import { useDragStore } from "@/stores/charts/drag";
 import { useChartEmaStore } from "@/stores/charts/ema";
 import { useChartMainStore } from "@/stores/charts/main";
 import { PRICE_CANVAS_WIDTH, useChartPriceStore } from "@/stores/charts/price";
@@ -50,7 +49,7 @@ const props = defineProps<{
 const storeChartMain = useChartMainStore();
 const { drawChart } = storeChartMain;
 const priceChart = useChartPriceStore();
-const { priceFromY, endPriceScaleDrag } = priceChart;
+const { priceFromY } = priceChart;
 const candelChart = useChartCandelStore();
 const { candles } = storeToRefs(candelChart);
 const emaStore = useChartEmaStore();
@@ -65,6 +64,7 @@ const priceCtx = ref(null);
 const priceScale = ref(1);
 const centerPrice = ref();
 const priceRange = ref();
+const scalingPriceByDrag = ref(false);
 
 const mainCanvas = ref(null);
 const mainCtx = ref(null);
@@ -236,9 +236,6 @@ function onPriceWheel(e) {
 }
 
 function onPriceScaleDrag(e) {
-  const drag = useDragStore();
-  const { scalingPriceByDrag } = storeToRefs(drag);
-
   if (!scalingPriceByDrag.value) return;
 
   const dy = e.offsetY - lastMouse.value.y;
@@ -287,10 +284,12 @@ function onPriceScaleDrag(e) {
 }
 
 function startPriceScaleDrag(e) {
-  const drag = useDragStore();
-  const { scalingPriceByDrag } = storeToRefs(drag);
   scalingPriceByDrag.value = true;
   lastMouse.value = { x: e.offsetX, y: e.offsetY };
+}
+
+function endPriceScaleDrag() {
+  scalingPriceByDrag.value = false;
 }
 
 function onCanvasContextMenu(e) {

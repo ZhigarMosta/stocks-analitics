@@ -2,7 +2,6 @@ import { defineStore, storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useChartMainStore } from "./main";
 import { useChartCandelStore } from "./candel";
-import { useDragStore } from "./drag";
 
 export const PRICE_CANVAS_WIDTH = 80;
 
@@ -277,12 +276,6 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     ctx.fillText(price.toFixed(2), 5, mouse.y - 5);
   }
 
-  function endPriceScaleDrag() {
-    const storeDrag = useDragStore();
-    const { scalingPriceByDrag } = storeToRefs(storeDrag);
-    scalingPriceByDrag.value = false;
-  }
-
   return {
     scaleYFromPrice,
     priceFromY,
@@ -290,6 +283,5 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     drawPriceScale,
     drawHoverPriceLine,
     drawHoverLine,
-    endPriceScaleDrag,
   };
 });
