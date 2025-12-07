@@ -50,7 +50,6 @@ const props = defineProps<{
 const storeChartMain = useChartMainStore();
 const { drawChart } = storeChartMain;
 const priceChart = useChartPriceStore();
-const { priceRange } = storeToRefs(priceChart);
 const { priceFromY, endPriceScaleDrag } = priceChart;
 const candelChart = useChartCandelStore();
 const { candles } = storeToRefs(candelChart);
@@ -65,6 +64,7 @@ const priceCanvas = ref(null);
 const priceCtx = ref(null);
 const priceScale = ref(1);
 const centerPrice = ref();
+const priceRange = ref();
 
 const mainCanvas = ref(null);
 const mainCtx = ref(null);
@@ -130,14 +130,12 @@ function onMainWheel(e: WheelEvent) {
     offset.value,
     scale.value,
     candleWidth.value,
-    centerPrice.value
+    centerPrice.value,
+    priceRange.value
   );
 }
 
 function onMouseMove(e) {
-  const priceChart = useChartPriceStore();
-  const { priceRange } = storeToRefs(priceChart);
-
   mouse.value = { x: e.offsetX, y: e.offsetY };
 
   if (dragging.value) {
@@ -167,7 +165,8 @@ function onMouseMove(e) {
     offset.value,
     scale.value,
     candleWidth.value,
-    centerPrice.value
+    centerPrice.value,
+    priceRange.value
   );
 }
 
@@ -203,7 +202,8 @@ function onPriceWheel(e) {
     props.height,
     priceScale.value,
     offset.value,
-    centerPrice.value
+    centerPrice.value,
+    priceRange.value
   );
 
   priceScale.value = Math.min(100, Math.max(0.01, priceScale.value * delta));
@@ -213,7 +213,8 @@ function onPriceWheel(e) {
     props.height,
     priceScale.value,
     offset.value,
-    centerPrice.value
+    centerPrice.value,
+    priceRange.value
   );
   centerPrice.value += priceBefore - priceAfter;
 
@@ -229,7 +230,8 @@ function onPriceWheel(e) {
     offset.value,
     scale.value,
     candleWidth.value,
-    centerPrice.value
+    centerPrice.value,
+    priceRange.value
   );
 }
 
@@ -251,7 +253,8 @@ function onPriceScaleDrag(e) {
     props.height,
     priceScale.value,
     offset.value,
-    centerPrice.value
+    centerPrice.value,
+    priceRange.value
   );
   priceScale.value = Math.max(0.01, Math.min(100, priceScale.value * delta));
   const priceAfter = priceFromY(
@@ -259,7 +262,8 @@ function onPriceScaleDrag(e) {
     props.height,
     priceScale.value,
     offset.value,
-    centerPrice.value
+    centerPrice.value,
+    priceRange.value
   );
 
   centerPrice.value += priceBefore - priceAfter;
@@ -277,7 +281,8 @@ function onPriceScaleDrag(e) {
     offset.value,
     scale.value,
     candleWidth.value,
-    centerPrice.value
+    centerPrice.value,
+    priceRange.value
   );
 }
 
@@ -304,7 +309,8 @@ function onCanvasContextMenu(e) {
       offset.value,
       scale.value,
       candleWidth.value,
-      centerPrice.value
+      centerPrice.value,
+      priceRange.value
     )
   ) {
     e.preventDefault();
@@ -325,7 +331,8 @@ function onCanvasContextMenu(e) {
     offset.value,
     scale.value,
     candleWidth.value,
-    centerPrice.value
+    centerPrice.value,
+    priceRange.value
   );
 }
 
@@ -342,7 +349,8 @@ const handleResize = () => {
     offset.value,
     scale.value,
     candleWidth.value,
-    centerPrice.value
+    centerPrice.value,
+    priceRange.value
   );
 };
 
@@ -380,7 +388,8 @@ onMounted(() => {
     offset.value,
     scale.value,
     candleWidth.value,
-    centerPrice.value
+    centerPrice.value,
+    priceRange.value
   );
 });
 

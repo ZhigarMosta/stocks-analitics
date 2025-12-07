@@ -17,7 +17,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
     offset: { x: number; y: number },
     scale: number,
     candleWidth: number,
-    centerPrice: number
+    centerPrice: number,
+    priceRange: number
   ) {
     const candelStore = useChartCandelStore();
     const { candles } = storeToRefs(candelStore);
@@ -31,14 +32,16 @@ export const useChartMainStore = defineStore("chartMain", () => {
         height,
         priceScale,
         offset,
-        centerPrice
+        centerPrice,
+        priceRange
       );
       const lowY = scaleYFromPrice(
         c.low,
         height,
         priceScale,
         offset,
-        centerPrice
+        centerPrice,
+        priceRange
       );
       const color = c.close >= c.open ? "#4caf50" : "#f44336";
 
@@ -63,7 +66,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
     offset: { x: number; y: number },
     scale: number,
     candleWidth: number,
-    centerPrice: number
+    centerPrice: number,
+    priceRange: number
   ) {
     const levelStore = useLevelStore();
     const { drawLevels } = levelStore;
@@ -86,7 +90,15 @@ export const useChartMainStore = defineStore("chartMain", () => {
     context.translate(offset.x, 0);
     context.scale(scale, 1);
 
-    drawLevels(context, width, height, priceScale, offset, centerPrice);
+    drawLevels(
+      context,
+      width,
+      height,
+      priceScale,
+      offset,
+      centerPrice,
+      priceRange
+    );
     drawCandlesBodiesOnly(
       context,
       height,
@@ -94,7 +106,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
       spacing,
       offset,
       candleWidth,
-      centerPrice
+      centerPrice,
+      priceRange
     );
     drawVolumes(context, height, spacing, candleWidth);
     drawEMA(
@@ -105,7 +118,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
       spacing,
       offset,
       candleWidth,
-      centerPrice
+      centerPrice,
+      priceRange
     );
 
     context.restore();
@@ -128,7 +142,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
       offset,
       scale,
       candleWidth,
-      centerPrice
+      centerPrice,
+      priceRange
     );
     drawHoverLine(
       context,
@@ -137,10 +152,19 @@ export const useChartMainStore = defineStore("chartMain", () => {
       mouse,
       priceScale,
       offset,
-      centerPrice
+      centerPrice,
+      priceRange
     );
 
-    drawPriceScale(priceCtx, height, mouse, priceScale, offset, centerPrice);
+    drawPriceScale(
+      priceCtx,
+      height,
+      mouse,
+      priceScale,
+      offset,
+      centerPrice,
+      priceRange
+    );
     drawHoverPriceLine(
       context,
       width,
@@ -151,7 +175,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
       offset,
       scale,
       candleWidth,
-      centerPrice
+      centerPrice,
+      priceRange
     );
     drawHoverHighLowLine(
       context,

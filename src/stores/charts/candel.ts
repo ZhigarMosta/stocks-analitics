@@ -166,7 +166,8 @@ export const useChartCandelStore = defineStore("candelChart", () => {
     spacing: number,
     offset: { x: number; y: number },
     candleWidth: number,
-    centerPrice: number
+    centerPrice: number,
+    priceRange: number
   ) {
     const priceStore = useChartPriceStore();
     const { scaleYFromPrice } = priceStore;
@@ -178,14 +179,16 @@ export const useChartCandelStore = defineStore("candelChart", () => {
         height,
         priceScale,
         offset,
-        centerPrice
+        centerPrice,
+        priceRange
       );
       const closeY = scaleYFromPrice(
         c.close,
         height,
         priceScale,
         offset,
-        centerPrice
+        centerPrice,
+        priceRange
       );
       const bodyTop = Math.min(openY, closeY);
       const bodyHeight = Math.abs(openY - closeY);

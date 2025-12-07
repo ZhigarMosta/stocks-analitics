@@ -20,7 +20,8 @@ export const useLevelStore = defineStore("level", () => {
     offset: { x: number; y: number },
     scale: number,
     candleWidth: number,
-    centerPrice: number
+    centerPrice: number,
+    priceRange: number
   ) {
     const priceStore = useChartPriceStore();
     const { priceFromY } = priceStore;
@@ -29,7 +30,7 @@ export const useLevelStore = defineStore("level", () => {
 
     e.preventDefault();
     levels.value.push(
-      priceFromY(e.offsetY, height, priceScale, offset, centerPrice)
+      priceFromY(e.offsetY, height, priceScale, offset, centerPrice, priceRange)
     );
 
     drawChart(
@@ -44,7 +45,8 @@ export const useLevelStore = defineStore("level", () => {
       offset,
       scale,
       candleWidth,
-      centerPrice
+      centerPrice,
+      priceRange
     );
   }
 
@@ -54,7 +56,8 @@ export const useLevelStore = defineStore("level", () => {
     height: number,
     priceScale: number,
     offset: { x: number; y: number },
-    centerPrice: number
+    centerPrice: number,
+    priceRange: number
   ) {
     const priceStore = useChartPriceStore();
     const { scaleYFromPrice } = priceStore;
@@ -67,7 +70,14 @@ export const useLevelStore = defineStore("level", () => {
     ctx.setLineDash([4, 4]);
 
     levels.value.forEach((price) => {
-      const y = scaleYFromPrice(price, height, priceScale, offset, centerPrice);
+      const y = scaleYFromPrice(
+        price,
+        height,
+        priceScale,
+        offset,
+        centerPrice,
+        priceRange
+      );
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(width + PRICE_CANVAS_WIDTH, y);

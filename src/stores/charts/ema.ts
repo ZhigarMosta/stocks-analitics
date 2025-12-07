@@ -1,6 +1,5 @@
 import { defineStore, storeToRefs } from "pinia";
 import { useChartCandelStore } from "./candel";
-import { useChartMainStore } from "./main";
 import { useChartPriceStore } from "./price";
 
 export const useChartEmaStore = defineStore("chartEma", () => {
@@ -12,7 +11,8 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     spacing: number,
     offset: { x: number; y: number },
     candleWidth: number,
-    centerPrice: number
+    centerPrice: number,
+    priceRange: number
   ) {
     const candelStore = useChartCandelStore();
     const { candles } = storeToRefs(candelStore);
@@ -37,7 +37,8 @@ export const useChartEmaStore = defineStore("chartEma", () => {
         height,
         priceScale,
         offset,
-        centerPrice
+        centerPrice,
+        priceRange
       );
 
       if (i === 0) {
@@ -94,7 +95,8 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     offset: { x: number; y: number },
     scale: number,
     candleWidth: number,
-    centerPrice: number
+    centerPrice: number,
+    priceRange: number
   ) {
     const candelStore = useChartCandelStore();
     const { candles } = storeToRefs(candelStore);
@@ -115,7 +117,8 @@ export const useChartEmaStore = defineStore("chartEma", () => {
         height,
         priceScale,
         offset,
-        centerPrice
+        centerPrice,
+        priceRange
       );
 
       const x2 = (i + 1) * stepX + candleWidth / 2;
@@ -124,7 +127,8 @@ export const useChartEmaStore = defineStore("chartEma", () => {
         height,
         priceScale,
         offset,
-        centerPrice
+        centerPrice,
+        priceRange
       );
 
       const transformedX1 = x1 * scale + offset.x;
