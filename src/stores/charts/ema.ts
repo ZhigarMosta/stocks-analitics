@@ -11,7 +11,8 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     priceScale: number,
     spacing: number,
     offset: { x: number; y: number },
-    candleWidth: number
+    candleWidth: number,
+    centerPrice: number
   ) {
     const candelStore = useChartCandelStore();
     const { candles } = storeToRefs(candelStore);
@@ -31,7 +32,13 @@ export const useChartEmaStore = defineStore("chartEma", () => {
       const x = i * stepX + candleWidth / 2;
       let y;
 
-      y = scaleYFromPrice(candle.close, height, priceScale, offset);
+      y = scaleYFromPrice(
+        candle.close,
+        height,
+        priceScale,
+        offset,
+        centerPrice
+      );
 
       if (i === 0) {
         ctx.moveTo(x, y);
@@ -86,7 +93,8 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     spacing: number,
     offset: { x: number; y: number },
     scale: number,
-    candleWidth: number
+    candleWidth: number,
+    centerPrice: number
   ) {
     const candelStore = useChartCandelStore();
     const { candles } = storeToRefs(candelStore);
@@ -106,11 +114,18 @@ export const useChartEmaStore = defineStore("chartEma", () => {
         currentCandle.close,
         height,
         priceScale,
-        offset
+        offset,
+        centerPrice
       );
 
       const x2 = (i + 1) * stepX + candleWidth / 2;
-      const y2 = scaleYFromPrice(nextCandle.close, height, priceScale, offset);
+      const y2 = scaleYFromPrice(
+        nextCandle.close,
+        height,
+        priceScale,
+        offset,
+        centerPrice
+      );
 
       const transformedX1 = x1 * scale + offset.x;
       const transformedX2 = x2 * scale + offset.x;

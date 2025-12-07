@@ -50,7 +50,7 @@ const props = defineProps<{
 const storeChartMain = useChartMainStore();
 const { drawChart } = storeChartMain;
 const priceChart = useChartPriceStore();
-const { centerPrice, priceRange } = storeToRefs(priceChart);
+const { priceRange } = storeToRefs(priceChart);
 const { priceFromY, endPriceScaleDrag } = priceChart;
 const candelChart = useChartCandelStore();
 const { candles } = storeToRefs(candelChart);
@@ -64,6 +64,7 @@ const candleWidth = ref(8);
 const priceCanvas = ref(null);
 const priceCtx = ref(null);
 const priceScale = ref(1);
+const centerPrice = ref();
 
 const mainCanvas = ref(null);
 const mainCtx = ref(null);
@@ -128,13 +129,14 @@ function onMainWheel(e: WheelEvent) {
     spacing.value,
     offset.value,
     scale.value,
-    candleWidth.value
+    candleWidth.value,
+    centerPrice.value
   );
 }
 
 function onMouseMove(e) {
   const priceChart = useChartPriceStore();
-  const { centerPrice, priceRange } = storeToRefs(priceChart);
+  const { priceRange } = storeToRefs(priceChart);
 
   mouse.value = { x: e.offsetX, y: e.offsetY };
 
@@ -164,7 +166,8 @@ function onMouseMove(e) {
     spacing.value,
     offset.value,
     scale.value,
-    candleWidth.value
+    candleWidth.value,
+    centerPrice.value
   );
 }
 
@@ -199,7 +202,8 @@ function onPriceWheel(e) {
     centerY,
     props.height,
     priceScale.value,
-    offset.value
+    offset.value,
+    centerPrice.value
   );
 
   priceScale.value = Math.min(100, Math.max(0.01, priceScale.value * delta));
@@ -208,7 +212,8 @@ function onPriceWheel(e) {
     centerY,
     props.height,
     priceScale.value,
-    offset.value
+    offset.value,
+    centerPrice.value
   );
   centerPrice.value += priceBefore - priceAfter;
 
@@ -223,7 +228,8 @@ function onPriceWheel(e) {
     spacing.value,
     offset.value,
     scale.value,
-    candleWidth.value
+    candleWidth.value,
+    centerPrice.value
   );
 }
 
@@ -244,14 +250,16 @@ function onPriceScaleDrag(e) {
     centerY,
     props.height,
     priceScale.value,
-    offset.value
+    offset.value,
+    centerPrice.value
   );
   priceScale.value = Math.max(0.01, Math.min(100, priceScale.value * delta));
   const priceAfter = priceFromY(
     centerY,
     props.height,
     priceScale.value,
-    offset.value
+    offset.value,
+    centerPrice.value
   );
 
   centerPrice.value += priceBefore - priceAfter;
@@ -268,7 +276,8 @@ function onPriceScaleDrag(e) {
     spacing.value,
     offset.value,
     scale.value,
-    candleWidth.value
+    candleWidth.value,
+    centerPrice.value
   );
 }
 
@@ -294,7 +303,8 @@ function onCanvasContextMenu(e) {
       spacing.value,
       offset.value,
       scale.value,
-      candleWidth.value
+      candleWidth.value,
+      centerPrice.value
     )
   ) {
     e.preventDefault();
@@ -314,7 +324,8 @@ function onCanvasContextMenu(e) {
     spacing.value,
     offset.value,
     scale.value,
-    candleWidth.value
+    candleWidth.value,
+    centerPrice.value
   );
 }
 
@@ -330,7 +341,8 @@ const handleResize = () => {
     spacing.value,
     offset.value,
     scale.value,
-    candleWidth.value
+    candleWidth.value,
+    centerPrice.value
   );
 };
 
@@ -367,7 +379,8 @@ onMounted(() => {
     spacing.value,
     offset.value,
     scale.value,
-    candleWidth.value
+    candleWidth.value,
+    centerPrice.value
   );
 });
 

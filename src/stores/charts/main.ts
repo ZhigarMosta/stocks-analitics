@@ -1,5 +1,4 @@
 import { defineStore, storeToRefs } from "pinia";
-import { Ref, ref } from "vue";
 import { useLevelStore } from "../instruments/level";
 import { useChartCandelStore } from "./candel";
 import { useChartPriceStore } from "./price";
@@ -17,7 +16,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
     spacing: number,
     offset: { x: number; y: number },
     scale: number,
-    candleWidth: number
+    candleWidth: number,
+    centerPrice: number
   ) {
     const candelStore = useChartCandelStore();
     const { candles } = storeToRefs(candelStore);
@@ -26,8 +26,20 @@ export const useChartMainStore = defineStore("chartMain", () => {
 
     candles.value.forEach((c, i) => {
       const x = i * (candleWidth + spacing) + candleWidth / 2;
-      const highY = scaleYFromPrice(c.high, height, priceScale, offset);
-      const lowY = scaleYFromPrice(c.low, height, priceScale, offset);
+      const highY = scaleYFromPrice(
+        c.high,
+        height,
+        priceScale,
+        offset,
+        centerPrice
+      );
+      const lowY = scaleYFromPrice(
+        c.low,
+        height,
+        priceScale,
+        offset,
+        centerPrice
+      );
       const color = c.close >= c.open ? "#4caf50" : "#f44336";
 
       ctx.strokeStyle = color;
@@ -50,7 +62,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
     spacing: number,
     offset: { x: number; y: number },
     scale: number,
-    candleWidth: number
+    candleWidth: number,
+    centerPrice: number
   ) {
     const levelStore = useLevelStore();
     const { drawLevels } = levelStore;
@@ -73,17 +86,27 @@ export const useChartMainStore = defineStore("chartMain", () => {
     context.translate(offset.x, 0);
     context.scale(scale, 1);
 
-    drawLevels(context, width, height, priceScale, offset);
+    drawLevels(context, width, height, priceScale, offset, centerPrice);
     drawCandlesBodiesOnly(
       context,
       height,
       priceScale,
       spacing,
       offset,
-      candleWidth
+      candleWidth,
+      centerPrice
     );
     drawVolumes(context, height, spacing, candleWidth);
-    drawEMA(context, false, height, priceScale, spacing, offset, candleWidth);
+    drawEMA(
+      context,
+      false,
+      height,
+      priceScale,
+      spacing,
+      offset,
+      candleWidth,
+      centerPrice
+    );
 
     context.restore();
 
@@ -104,11 +127,20 @@ export const useChartMainStore = defineStore("chartMain", () => {
       spacing,
       offset,
       scale,
-      candleWidth
+      candleWidth,
+      centerPrice
     );
-    drawHoverLine(context, width, height, mouse, priceScale, offset);
+    drawHoverLine(
+      context,
+      width,
+      height,
+      mouse,
+      priceScale,
+      offset,
+      centerPrice
+    );
 
-    drawPriceScale(priceCtx, height, mouse, priceScale, offset);
+    drawPriceScale(priceCtx, height, mouse, priceScale, offset, centerPrice);
     drawHoverPriceLine(
       context,
       width,
@@ -118,7 +150,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
       spacing,
       offset,
       scale,
-      candleWidth
+      candleWidth,
+      centerPrice
     );
     drawHoverHighLowLine(
       context,

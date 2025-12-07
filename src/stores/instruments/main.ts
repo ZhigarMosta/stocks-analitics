@@ -18,7 +18,8 @@ export const useInstrumentStore = defineStore("instrument", () => {
     spacing: number,
     offset: { x: number; y: number },
     scale: number,
-    candleWidth: number
+    candleWidth: number,
+    centerPrice: number
   ) {
     const levelStore = useLevelStore();
     const { addLevls } = levelStore;
@@ -35,7 +36,8 @@ export const useInstrumentStore = defineStore("instrument", () => {
         spacing,
         offset,
         scale,
-        candleWidth
+        candleWidth,
+        centerPrice
       );
     }
   }

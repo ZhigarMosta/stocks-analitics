@@ -7,18 +7,18 @@ import { useDragStore } from "./drag";
 export const PRICE_CANVAS_WIDTH = 80;
 
 export const useChartPriceStore = defineStore("chartPrice", () => {
-  const centerPrice = ref();
   const priceRange = ref();
 
   function scaleYFromPrice(
     price,
     height: number,
     priceScale: number,
-    offset: { x: number; y: number }
+    offset: { x: number; y: number },
+    centerPrice: number
   ) {
     const drawableHeight = height - 100;
     const visualCenter = height / 2 + offset.y;
-    const normalized = (price - centerPrice.value) / priceRange.value;
+    const normalized = (price - centerPrice) / priceRange.value;
     return visualCenter - normalized * drawableHeight * priceScale;
   }
 
@@ -26,12 +26,13 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     y,
     height: number,
     priceScale: number,
-    offset: { x: number; y: number }
+    offset: { x: number; y: number },
+    centerPrice: number
   ) {
     const drawableHeight = height - 100;
     const visualCenter = height / 2 + offset.y;
     const normalized = (visualCenter - y) / (drawableHeight * priceScale);
-    return centerPrice.value + normalized * priceRange.value;
+    return centerPrice + normalized * priceRange.value;
   }
 
   function drawHoverHighLowLine(
@@ -42,7 +43,8 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     spacing: number,
     offset: { x: number; y: number },
     scale: number,
-    candleWidth: number
+    candleWidth: number,
+    centerPrice: number
   ) {
     const candelChart = useChartCandelStore();
     const { candles } = storeToRefs(candelChart);
@@ -56,8 +58,20 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     const candle = candles.value[index];
     if (!candle) return;
 
-    const highY = scaleYFromPrice(candle.high, height, priceScale, offset);
-    const lowY = scaleYFromPrice(candle.low, height, priceScale, offset);
+    const highY = scaleYFromPrice(
+      candle.high,
+      height,
+      priceScale,
+      offset,
+      centerPrice
+    );
+    const lowY = scaleYFromPrice(
+      candle.low,
+      height,
+      priceScale,
+      offset,
+      centerPrice
+    );
 
     const distToHigh = Math.abs(mouse.y - highY);
     const distToLow = Math.abs(mouse.y - lowY);
@@ -104,14 +118,27 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     height: number,
     mouse: { x: number; y: number },
     priceScale: number,
-    offset: { x: number; y: number }
+    offset: { x: number; y: number },
+    centerPrice: number
   ) {
     const context = priceCtx;
 
     context.clearRect(0, 0, PRICE_CANVAS_WIDTH, height);
 
-    const visiblePriceStart = priceFromY(height, height, priceScale, offset);
-    const visiblePriceEnd = priceFromY(0, height, priceScale, offset);
+    const visiblePriceStart = priceFromY(
+      height,
+      height,
+      priceScale,
+      offset,
+      centerPrice
+    );
+    const visiblePriceEnd = priceFromY(
+      0,
+      height,
+      priceScale,
+      offset,
+      centerPrice
+    );
     const visibleRange = visiblePriceEnd - visiblePriceStart;
 
     const spaceBetweenPrice = 50;
@@ -122,7 +149,7 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     const lastPrice = Math.floor(visiblePriceEnd / step) * step;
 
     for (let price = firstPrice; price <= lastPrice; price += step) {
-      const y = scaleYFromPrice(price, height, priceScale, offset);
+      const y = scaleYFromPrice(price, height, priceScale, offset, centerPrice);
       if (y < 0 || y > height) continue;
 
       context.strokeStyle = "#ccc";
@@ -137,7 +164,13 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
       context.fillText(price.toFixed(2), PRICE_CANVAS_WIDTH - 5, y + 4);
     }
 
-    const hoveredPrice = priceFromY(mouse.y, height, priceScale, offset);
+    const hoveredPrice = priceFromY(
+      mouse.y,
+      height,
+      priceScale,
+      offset,
+      centerPrice
+    );
     context.strokeStyle = "#888";
     context.beginPath();
     context.moveTo(0, mouse.y);
@@ -157,56 +190,6 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     );
   }
 
-  function onPriceScaleDrag(
-    e,
-    timeCtx,
-    priceCtx,
-    mainCtx,
-    width: number,
-    height: number,
-    lastMouse,
-    mouse: { x: number; y: number },
-    priceScale: number,
-    scalingPriceByDrag: boolean,
-    spacing: number,
-    offset: { x: number; y: number },
-    scale: number,
-    candleWidth: number
-  ) {
-    const mainChart = useChartMainStore();
-    const { drawChart } = mainChart;
-
-    if (!scalingPriceByDrag) return;
-
-    const dy = e.offsetY - lastMouse.value.y;
-
-    const zoomFactor = 1.038; // чувствительность
-    const delta = dy > 0 ? 1 / zoomFactor : zoomFactor;
-
-    const centerY = height / 2;
-
-    const priceBefore = priceFromY(centerY, height, priceScale, offset);
-    priceScale = Math.max(0.01, Math.min(100, priceScale * delta));
-    const priceAfter = priceFromY(centerY, height, priceScale, offset);
-
-    centerPrice.value += priceBefore - priceAfter;
-    lastMouse.value = { x: e.offsetX, y: e.offsetY };
-
-    drawChart(
-      timeCtx,
-      priceCtx,
-      mainCtx,
-      width,
-      height,
-      mouse,
-      priceScale,
-      spacing,
-      offset,
-      scale,
-      candleWidth
-    );
-  }
-
   function drawHoverPriceLine(
     ctx,
     width: number,
@@ -216,7 +199,8 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     spacing: number,
     offset: { x: number; y: number },
     scale: number,
-    candleWidth: number
+    candleWidth: number,
+    centerPrice: number
   ) {
     const candelChart = useChartCandelStore();
     const { candles } = storeToRefs(candelChart);
@@ -230,7 +214,13 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     const candle = candles.value[index];
     if (!candle) return;
 
-    const y = scaleYFromPrice(candle.high, height, priceScale, offset);
+    const y = scaleYFromPrice(
+      candle.high,
+      height,
+      priceScale,
+      offset,
+      centerPrice
+    );
 
     ctx.strokeStyle = "#ff9900";
     ctx.lineWidth = 1;
@@ -248,7 +238,8 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     height: number,
     mouse: { x: number; y: number },
     priceScale: number,
-    offset: { x: number; y: number }
+    offset: { x: number; y: number },
+    centerPrice: number
   ) {
     ctx.strokeStyle = "#cccccc";
     ctx.beginPath();
@@ -256,7 +247,7 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     ctx.lineTo(width, mouse.y);
     ctx.stroke();
 
-    const price = priceFromY(mouse.y, height, priceScale, offset);
+    const price = priceFromY(mouse.y, height, priceScale, offset, centerPrice);
     ctx.fillStyle = "#000";
     ctx.font = "12px sans-serif";
     ctx.fillText(price.toFixed(2), 5, mouse.y - 5);
@@ -269,7 +260,6 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
   }
 
   return {
-    centerPrice,
     priceRange,
     scaleYFromPrice,
     priceFromY,
@@ -277,7 +267,6 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     drawPriceScale,
     drawHoverPriceLine,
     drawHoverLine,
-    onPriceScaleDrag,
     endPriceScaleDrag,
   };
 });

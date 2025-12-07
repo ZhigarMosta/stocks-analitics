@@ -97,12 +97,12 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     spacing: number,
     offset: { x: number; y: number },
     scale: number,
-    candleWidth: number
+    candleWidth: number,
   ) {
     const candelStore = useChartCandelStore();
     const { candles } = storeToRefs(candelStore);
-    const priceStore = useChartPriceStore();
-    const { scaleYFromPrice } = priceStore;
+    // const priceStore = useChartPriceStore();
+    // const { scaleYFromPrice } = priceStore;
 
     if (!candles.value.length) return;
 
@@ -113,13 +113,25 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     const candle = candles.value[index];
     if (!candle) return;
 
-    const highY = scaleYFromPrice(candle.high, height, priceScale, offset);
-    const lowY = scaleYFromPrice(candle.low, height, priceScale, offset);
+    // const highY = scaleYFromPrice(
+    //   candle.high,
+    //   height,
+    //   priceScale,
+    //   offset,
+    //   centerPrice
+    // );
+    // const lowY = scaleYFromPrice(
+    //   candle.low,
+    //   height,
+    //   priceScale,
+    //   offset,
+    //   centerPrice
+    // );
 
-    const distToHigh = Math.abs(mouse.y - highY);
-    const distToLow = Math.abs(mouse.y - lowY);
-    const y = distToHigh < distToLow ? highY : lowY;
-    const price = distToHigh < distToLow ? candle.high : candle.low;
+    // const distToHigh = Math.abs(mouse.y - highY);
+    // const distToLow = Math.abs(mouse.y - lowY);
+    // const y = distToHigh < distToLow ? highY : lowY;
+    // const price = distToHigh < distToLow ? candle.high : candle.low;
 
     const x = index * totalCandleWidth + candleWidth / 2;
 
