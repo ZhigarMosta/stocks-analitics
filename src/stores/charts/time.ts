@@ -9,7 +9,7 @@ export const TIME_CANVAS_HEIGHT = 40;
 export const useChartTimeStore = defineStore("chartTime", () => {
   function drawTimeAxis(
     width: number,
-    candleWidth: Ref,
+    candleWidth: number,
     spacing: number,
     offset: { x: number; y: number },
     scale: number,
@@ -25,17 +25,17 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     ctx.fillStyle = "#000";
     ctx.textAlign = "center";
 
-    const candleStep = candleWidth.value + spacing;
+    const candleStep = candleWidth + spacing;
     const visibleStart = -offset.x / scale;
     const visibleEnd = (width - offset.x) / scale;
 
-    const skip = Math.ceil(60 / (candleWidth.value * scale));
+    const skip = Math.ceil(60 / (candleWidth * scale));
 
     candles.value.forEach((candle, i) => {
       const x = i * candleStep;
       if (x < visibleStart || x > visibleEnd || i % skip !== 0) return;
 
-      const posX = x * scale + offset.x + candleWidth.value / 2;
+      const posX = x * scale + offset.x + candleWidth / 2;
       const d = new Date(candle.date);
       const label = d.toLocaleDateString("ru-RU", {
         day: "2-digit",
@@ -54,21 +54,22 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     mouse: { x: number; y: number },
     spacing: number,
     offset: { x: number; y: number },
-    scale: number
+    scale: number,
+    candleWidth: number
   ) {
     const candelStore = useChartCandelStore();
-    const { candles, candleWidth } = storeToRefs(candelStore);
+    const { candles } = storeToRefs(candelStore);
 
     if (!candles.value.length) return;
 
     const relativeMouseX = (mouse.x - offset.x) / scale;
-    const totalCandleWidth = candleWidth.value + spacing;
+    const totalCandleWidth = candleWidth + spacing;
     const index = Math.floor(relativeMouseX / totalCandleWidth);
 
     const candle = candles.value[index];
     if (!candle) return;
 
-    const x = index * totalCandleWidth + candleWidth.value / 2;
+    const x = index * totalCandleWidth + candleWidth / 2;
     const posX = x * scale + offset.x;
     const label = candle.date || `#${index + 1}`;
 
@@ -95,17 +96,18 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     mouse: { x: number; y: number },
     spacing: number,
     offset: { x: number; y: number },
-    scale: number
+    scale: number,
+    candleWidth: number
   ) {
     const candelStore = useChartCandelStore();
-    const { candles, candleWidth } = storeToRefs(candelStore);
+    const { candles } = storeToRefs(candelStore);
     const priceStore = useChartPriceStore();
     const { scaleYFromPrice } = priceStore;
 
     if (!candles.value.length) return;
 
     const relativeMouseX = (mouse.x - offset.x) / scale;
-    const totalCandleWidth = candleWidth.value + spacing;
+    const totalCandleWidth = candleWidth + spacing;
     const index = Math.floor(relativeMouseX / totalCandleWidth);
 
     const candle = candles.value[index];
@@ -119,7 +121,7 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     const y = distToHigh < distToLow ? highY : lowY;
     const price = distToHigh < distToLow ? candle.high : candle.low;
 
-    const x = index * totalCandleWidth + candleWidth.value / 2;
+    const x = index * totalCandleWidth + candleWidth / 2;
 
     ctx.save();
     ctx.strokeStyle = "#cccccc";

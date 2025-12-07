@@ -41,15 +41,16 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     mouse: { x: number; y: number },
     spacing: number,
     offset: { x: number; y: number },
-    scale: number
+    scale: number,
+    candleWidth: number
   ) {
     const candelChart = useChartCandelStore();
-    const { candleWidth, candles } = storeToRefs(candelChart);
+    const { candles } = storeToRefs(candelChart);
 
     if (!candles.value.length) return;
 
     const relativeMouseX = (mouse.x - offset.x) / scale;
-    const totalCandleWidth = candleWidth.value + spacing;
+    const totalCandleWidth = candleWidth + spacing;
     const index = Math.floor(relativeMouseX / totalCandleWidth);
 
     const candle = candles.value[index];
@@ -63,7 +64,7 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     const y = distToHigh < distToLow ? highY : lowY;
     const price = distToHigh < distToLow ? candle.high : candle.low;
 
-    const x = index * totalCandleWidth + candleWidth.value / 2;
+    const x = index * totalCandleWidth + candleWidth / 2;
 
     ctx.save();
     ctx.strokeStyle = "#cccccc";
@@ -169,7 +170,8 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     scalingPriceByDrag: boolean,
     spacing: number,
     offset: { x: number; y: number },
-    scale: number
+    scale: number,
+    candleWidth: number
   ) {
     const mainChart = useChartMainStore();
     const { drawChart } = mainChart;
@@ -200,7 +202,8 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
       priceScale,
       spacing,
       offset,
-      scale
+      scale,
+      candleWidth
     );
   }
 
@@ -212,15 +215,16 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     priceScale: number,
     spacing: number,
     offset: { x: number; y: number },
-    scale: number
+    scale: number,
+    candleWidth: number
   ) {
     const candelChart = useChartCandelStore();
-    const { candleWidth, candles } = storeToRefs(candelChart);
+    const { candles } = storeToRefs(candelChart);
 
     if (!candles.value.length) return;
 
     const mouseX = (mouse.x - offset.x) / scale;
-    const totalWidth = candleWidth.value + spacing;
+    const totalWidth = candleWidth + spacing;
     const index = Math.floor(mouseX / totalWidth);
 
     const candle = candles.value[index];

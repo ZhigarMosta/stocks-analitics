@@ -53,11 +53,13 @@ const priceChart = useChartPriceStore();
 const { centerPrice, priceRange } = storeToRefs(priceChart);
 const { priceFromY, endPriceScaleDrag } = priceChart;
 const candelChart = useChartCandelStore();
-const { candleWidth, candles } = storeToRefs(candelChart);
+const { candles } = storeToRefs(candelChart);
 const emaStore = useChartEmaStore();
 const { isClickOnEMA } = emaStore;
 const instrumentStore = useInstrumentStore();
 const { onAddInstrument } = instrumentStore;
+
+const candleWidth = ref(8);
 
 const priceCanvas = ref(null);
 const priceCtx = ref(null);
@@ -84,7 +86,7 @@ function endPan() {
 
 function onMainWheel(e: WheelEvent) {
   const candelStore = useChartCandelStore();
-  const { candleWidth, candles } = storeToRefs(candelStore);
+  const { candles } = storeToRefs(candelStore);
 
   e.preventDefault();
   const zoomFactor = 1.1;
@@ -125,7 +127,8 @@ function onMainWheel(e: WheelEvent) {
     priceScale.value,
     spacing.value,
     offset.value,
-    scale.value
+    scale.value,
+    candleWidth.value
   );
 }
 
@@ -160,13 +163,14 @@ function onMouseMove(e) {
     priceScale.value,
     spacing.value,
     offset.value,
-    scale.value
+    scale.value,
+    candleWidth.value
   );
 }
 
 function clampHorizontalOffset() {
   const candelStore = useChartCandelStore();
-  const { candleWidth, candles } = storeToRefs(candelStore);
+  const { candles } = storeToRefs(candelStore);
 
   const totalCandleWidth = candleWidth.value + spacing.value;
   const totalWidth = totalCandleWidth * candles.value.length * scale.value;
@@ -218,7 +222,8 @@ function onPriceWheel(e) {
     priceScale.value,
     spacing.value,
     offset.value,
-    scale.value
+    scale.value,
+    candleWidth.value
   );
 }
 
@@ -262,7 +267,8 @@ function onPriceScaleDrag(e) {
     priceScale.value,
     spacing.value,
     offset.value,
-    scale.value
+    scale.value,
+    candleWidth.value
   );
 }
 
@@ -287,7 +293,8 @@ function onCanvasContextMenu(e) {
       priceScale.value,
       spacing.value,
       offset.value,
-      scale.value
+      scale.value,
+      candleWidth.value
     )
   ) {
     e.preventDefault();
@@ -306,7 +313,8 @@ function onCanvasContextMenu(e) {
     priceScale.value,
     spacing.value,
     offset.value,
-    scale.value
+    scale.value,
+    candleWidth.value
   );
 }
 
@@ -321,7 +329,8 @@ const handleResize = () => {
     priceScale.value,
     spacing.value,
     offset.value,
-    scale.value
+    scale.value,
+    candleWidth.value
   );
 };
 
@@ -357,7 +366,8 @@ onMounted(() => {
     priceScale.value,
     spacing.value,
     offset.value,
-    scale.value
+    scale.value,
+    candleWidth.value
   );
 });
 

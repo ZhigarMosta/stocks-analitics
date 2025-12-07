@@ -3,7 +3,6 @@ import { ref } from "vue";
 import { useChartPriceStore } from "./price";
 
 export const useChartCandelStore = defineStore("candelChart", () => {
-  const candleWidth = ref(8);
   const candles = ref([
     {
       time: 1,
@@ -165,13 +164,14 @@ export const useChartCandelStore = defineStore("candelChart", () => {
     height: number,
     priceScale: number,
     spacing: number,
-    offset: { x: number; y: number }
+    offset: { x: number; y: number },
+    candleWidth:number
   ) {
     const priceStore = useChartPriceStore();
     const { scaleYFromPrice } = priceStore;
 
     candles.value.forEach((c, i) => {
-      const x = i * (candleWidth.value + spacing);
+      const x = i * (candleWidth + spacing);
       const openY = scaleYFromPrice(c.open, height, priceScale, offset);
       const closeY = scaleYFromPrice(c.close, height, priceScale, offset);
       const bodyTop = Math.min(openY, closeY);
@@ -179,12 +179,11 @@ export const useChartCandelStore = defineStore("candelChart", () => {
       const color = c.close >= c.open ? "#4caf50" : "#f44336";
 
       ctx.fillStyle = color;
-      ctx.fillRect(x, bodyTop, candleWidth.value, Math.max(1, bodyHeight));
+      ctx.fillRect(x, bodyTop, candleWidth, Math.max(1, bodyHeight));
     });
   }
   
   return {
-    candleWidth,
     candles,
     drawCandlesBodiesOnly,
   };

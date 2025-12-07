@@ -10,10 +10,11 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     height: number,
     priceScale: number,
     spacing: number,
-    offset: { x: number; y: number }
+    offset: { x: number; y: number },
+    candleWidth: number
   ) {
     const candelStore = useChartCandelStore();
-    const { candles, candleWidth } = storeToRefs(candelStore);
+    const { candles } = storeToRefs(candelStore);
     const mainPrice = useChartPriceStore();
     const { scaleYFromPrice } = mainPrice;
 
@@ -24,10 +25,10 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     ctx.strokeStyle = isIndicatorArea ? "#FF6B6B" : "#000";
     ctx.beginPath();
 
-    const stepX = candleWidth.value + spacing;
+    const stepX = candleWidth + spacing;
 
     candles.value.forEach((candle, i) => {
-      const x = i * stepX + candleWidth.value / 2;
+      const x = i * stepX + candleWidth / 2;
       let y;
 
       y = scaleYFromPrice(candle.close, height, priceScale, offset);
@@ -84,22 +85,23 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     priceScale: number,
     spacing: number,
     offset: { x: number; y: number },
-    scale: number
+    scale: number,
+    candleWidth: number
   ) {
     const candelStore = useChartCandelStore();
-    const { candles, candleWidth } = storeToRefs(candelStore);
+    const { candles } = storeToRefs(candelStore);
     const mainPrice = useChartPriceStore();
     const { scaleYFromPrice } = mainPrice;
 
     if (!candles.value.length) return false;
 
-    const stepX = candleWidth.value + spacing;
+    const stepX = candleWidth + spacing;
 
     for (let i = 0; i < candles.value.length - 1; i++) {
       const currentCandle = candles.value[i];
       const nextCandle = candles.value[i + 1];
 
-      const x1 = i * stepX + candleWidth.value / 2;
+      const x1 = i * stepX + candleWidth / 2;
       const y1 = scaleYFromPrice(
         currentCandle.close,
         height,
@@ -107,7 +109,7 @@ export const useChartEmaStore = defineStore("chartEma", () => {
         offset
       );
 
-      const x2 = (i + 1) * stepX + candleWidth.value / 2;
+      const x2 = (i + 1) * stepX + candleWidth / 2;
       const y2 = scaleYFromPrice(nextCandle.close, height, priceScale, offset);
 
       const transformedX1 = x1 * scale + offset.x;
