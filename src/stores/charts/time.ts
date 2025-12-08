@@ -1,8 +1,6 @@
 import { defineStore, storeToRefs } from "pinia";
-import { Ref, ref } from "vue";
-import { useChartMainStore } from "./main";
+import { Ref } from "vue";
 import { useChartCandelStore } from "./candel";
-import { useChartPriceStore } from "./price";
 
 export const TIME_CANVAS_HEIGHT = 40;
 

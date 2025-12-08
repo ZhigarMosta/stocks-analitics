@@ -104,7 +104,6 @@ const timeCtx = ref(null);
 const containerPosition = ref({ x: 0, y: 0 });
 const isDraggingContainer = ref(false);
 const dragStart = ref({ x: 0, y: 0 });
-const scalingPriceByDrag = ref(false);
 
 const containerStyle = computed(() => ({
   transform: `translate(${containerPosition.value.x}px, ${containerPosition.value.y}px)`,
@@ -226,7 +225,6 @@ function stopContainerDrag() {
   document.removeEventListener("mouseup", stopContainerDrag);
 }
 
-
 watch([width, height], () => {
   if (timeCanvas.value) {
     timeCanvas.value.width = width.value;
@@ -238,7 +236,7 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+<style>
 .chart-wrapper-with-resizers {
   display: inline-block;
   position: relative;

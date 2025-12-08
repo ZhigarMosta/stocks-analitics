@@ -10,8 +10,4 @@ import Charts from "./components/Charts.vue";
 </template>
 
 <style lang="scss" scoped>
-.charts {
-  display: flex;
-  gap: 500px;
-}
 </style>

@@ -1,6 +1,4 @@
 import { defineStore, storeToRefs } from "pinia";
-import { ref } from "vue";
-import { useChartMainStore } from "./main";
 import { useChartCandelStore } from "./candel";
 
 export const PRICE_CANVAS_WIDTH = 80;
