@@ -1,6 +1,7 @@
 import { defineStore, storeToRefs } from "pinia";
 import { Ref } from "vue";
 import { useChartCandelStore } from "./candel";
+import { ICandel } from "../user/user";
 
 export const TIME_CANVAS_HEIGHT = 40;
 
@@ -11,7 +12,7 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     spacing: number,
     offset: { x: number; y: number },
     scale: number,
-    candles: Ref,
+    candles: Array<ICandel>,
     timeCtx
   ) {
     const ctx = timeCtx;
@@ -29,7 +30,7 @@ export const useChartTimeStore = defineStore("chartTime", () => {
 
     const skip = Math.ceil(60 / (candleWidth * scale));
 
-    candles.value.forEach((candle, i) => {
+    candles.forEach((candle, i) => {
       const x = i * candleStep;
       if (x < visibleStart || x > visibleEnd || i % skip !== 0) return;
 
@@ -53,18 +54,16 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     spacing: number,
     offset: { x: number; y: number },
     scale: number,
-    candleWidth: number
+    candleWidth: number,
+    candles: Array<ICandel>
   ) {
-    const candelStore = useChartCandelStore();
-    const { candles } = storeToRefs(candelStore);
-
-    if (!candles.value.length) return;
+    if (!candles.length) return;
 
     const relativeMouseX = (mouse.x - offset.x) / scale;
     const totalCandleWidth = candleWidth + spacing;
     const index = Math.floor(relativeMouseX / totalCandleWidth);
 
-    const candle = candles.value[index];
+    const candle = candles[index];
     if (!candle) return;
 
     const x = index * totalCandleWidth + candleWidth / 2;
@@ -96,19 +95,18 @@ export const useChartTimeStore = defineStore("chartTime", () => {
     offset: { x: number; y: number },
     scale: number,
     candleWidth: number,
+    candles: Array<ICandel>
   ) {
-    const candelStore = useChartCandelStore();
-    const { candles } = storeToRefs(candelStore);
     // const priceStore = useChartPriceStore();
     // const { scaleYFromPrice } = priceStore;
 
-    if (!candles.value.length) return;
+    if (!candles.length) return;
 
     const relativeMouseX = (mouse.x - offset.x) / scale;
     const totalCandleWidth = candleWidth + spacing;
     const index = Math.floor(relativeMouseX / totalCandleWidth);
 
-    const candle = candles.value[index];
+    const candle = candles[index];
     if (!candle) return;
 
     // const highY = scaleYFromPrice(

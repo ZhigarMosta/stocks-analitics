@@ -1,5 +1,6 @@
 import { defineStore, storeToRefs } from "pinia";
 import { useChartCandelStore } from "./candel";
+import { ICandel } from "../user/user";
 
 export const PRICE_CANVAS_WIDTH = 80;
 
@@ -42,18 +43,16 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     scale: number,
     candleWidth: number,
     centerPrice: number,
-    priceRange: number
+    priceRange: number,
+    candles: Array<ICandel>
   ) {
-    const candelChart = useChartCandelStore();
-    const { candles } = storeToRefs(candelChart);
-
-    if (!candles.value.length) return;
+    if (!candles.length) return;
 
     const relativeMouseX = (mouse.x - offset.x) / scale;
     const totalCandleWidth = candleWidth + spacing;
     const index = Math.floor(relativeMouseX / totalCandleWidth);
 
-    const candle = candles.value[index];
+    const candle = candles[index];
     if (!candle) return;
 
     const highY = scaleYFromPrice(
@@ -212,18 +211,16 @@ export const useChartPriceStore = defineStore("chartPrice", () => {
     scale: number,
     candleWidth: number,
     centerPrice: number,
-    priceRange: number
+    priceRange: number,
+    candles: Array<ICandel>
   ) {
-    const candelChart = useChartCandelStore();
-    const { candles } = storeToRefs(candelChart);
-
-    if (!candles.value.length) return;
+    if (!candles.length) return;
 
     const mouseX = (mouse.x - offset.x) / scale;
     const totalWidth = candleWidth + spacing;
     const index = Math.floor(mouseX / totalWidth);
 
-    const candle = candles.value[index];
+    const candle = candles[index];
     if (!candle) return;
 
     const y = scaleYFromPrice(

@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { useChartMainStore } from "../charts/main";
 import { PRICE_CANVAS_WIDTH, useChartPriceStore } from "../charts/price";
 import { Instruments, useInstrumentStore } from "./main";
+import { ICandel } from "../user/user";
 
 export const useLevelStore = defineStore("level", () => {
   const levels = ref([100, 107, 110]);
@@ -21,7 +22,8 @@ export const useLevelStore = defineStore("level", () => {
     scale: number,
     candleWidth: number,
     centerPrice: number,
-    priceRange: number
+    priceRange: number,
+    candles: Array<ICandel>
   ) {
     const priceStore = useChartPriceStore();
     const { priceFromY } = priceStore;
@@ -46,7 +48,8 @@ export const useLevelStore = defineStore("level", () => {
       scale,
       candleWidth,
       centerPrice,
-      priceRange
+      priceRange,
+      candles
     );
   }
 

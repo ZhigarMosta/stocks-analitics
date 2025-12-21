@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useLevelStore } from "./level";
+import { ICandel } from "../user/user";
 export enum Instruments {
   LVL = 1,
 }
@@ -20,7 +21,8 @@ export const useInstrumentStore = defineStore("instrument", () => {
     scale: number,
     candleWidth: number,
     centerPrice: number,
-    priceRange: number
+    priceRange: number,
+    candles: Array<ICandel>
   ) {
     const levelStore = useLevelStore();
     const { addLevls } = levelStore;
@@ -39,7 +41,8 @@ export const useInstrumentStore = defineStore("instrument", () => {
         scale,
         candleWidth,
         centerPrice,
-        priceRange
+        priceRange,
+        candles
       );
     }
   }

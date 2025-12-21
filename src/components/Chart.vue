@@ -39,24 +39,25 @@ import { PRICE_CANVAS_WIDTH, useChartPriceStore } from "@/stores/charts/price";
 import { useInstrumentStore } from "@/stores/instruments/main";
 import { storeToRefs } from "pinia";
 import { onMounted, onUnmounted, ref, Ref } from "vue";
+import { ICandel, IChart } from "../stores/user/user";
 
 const props = defineProps<{
   timeCtx: Ref;
   width: number;
   height: number;
+  charts: IChart;
 }>();
 
 const storeChartMain = useChartMainStore();
 const { drawChart } = storeChartMain;
 const priceChart = useChartPriceStore();
 const { priceFromY } = priceChart;
-const candelChart = useChartCandelStore();
-const { candles } = storeToRefs(candelChart);
 const emaStore = useChartEmaStore();
 const { isClickOnEMA } = emaStore;
 const instrumentStore = useInstrumentStore();
 const { onAddInstrument } = instrumentStore;
 
+let candels = props.charts.candels;
 const candleWidth = ref(8);
 
 const priceCanvas = ref(null);
@@ -86,9 +87,6 @@ function endPan() {
 }
 
 function onMainWheel(e: WheelEvent) {
-  const candelStore = useChartCandelStore();
-  const { candles } = storeToRefs(candelStore);
-
   e.preventDefault();
   const zoomFactor = 1.1;
   const delta = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
@@ -111,7 +109,7 @@ function onMainWheel(e: WheelEvent) {
     const deltaWorldPivot = worldPivotAfter - worldPivotBefore;
     offset.value.x += deltaWorldPivot * scale.value;
 
-    const totalGraphWidth = candles.value.length * newTotalWidth * scale.value;
+    const totalGraphWidth = candels.length * newTotalWidth * scale.value;
     const minOffsetX = Math.min(props.width - totalGraphWidth, 0);
     offset.value.x = Math.max(minOffsetX, offset.value.x);
   }
@@ -131,7 +129,8 @@ function onMainWheel(e: WheelEvent) {
     scale.value,
     candleWidth.value,
     centerPrice.value,
-    priceRange.value
+    priceRange.value,
+    candels
   );
 }
 
@@ -166,16 +165,14 @@ function onMouseMove(e) {
     scale.value,
     candleWidth.value,
     centerPrice.value,
-    priceRange.value
+    priceRange.value,
+    candels
   );
 }
 
 function clampHorizontalOffset() {
-  const candelStore = useChartCandelStore();
-  const { candles } = storeToRefs(candelStore);
-
   const totalCandleWidth = candleWidth.value + spacing.value;
-  const totalWidth = totalCandleWidth * candles.value.length * scale.value;
+  const totalWidth = totalCandleWidth * candels.length * scale.value;
 
   const minOffsetX = -(totalWidth - candleWidth.value * scale.value);
   const maxOffsetX = candleWidth.value * scale.value;
@@ -231,7 +228,8 @@ function onPriceWheel(e) {
     scale.value,
     candleWidth.value,
     centerPrice.value,
-    priceRange.value
+    priceRange.value,
+    candels
   );
 }
 
@@ -279,7 +277,8 @@ function onPriceScaleDrag(e) {
     scale.value,
     candleWidth.value,
     centerPrice.value,
-    priceRange.value
+    priceRange.value,
+    candels
   );
 }
 
@@ -309,7 +308,8 @@ function onCanvasContextMenu(e) {
       scale.value,
       candleWidth.value,
       centerPrice.value,
-      priceRange.value
+      priceRange.value,
+      candels
     )
   ) {
     e.preventDefault();
@@ -319,7 +319,7 @@ function onCanvasContextMenu(e) {
 
   onAddInstrument(
     e,
-    props.timeCtx.value,
+    props.timeCtx,
     priceCtx.value,
     mainCtx.value,
     props.width,
@@ -331,13 +331,14 @@ function onCanvasContextMenu(e) {
     scale.value,
     candleWidth.value,
     centerPrice.value,
-    priceRange.value
+    priceRange.value,
+    candels
   );
 }
 
 const handleResize = () => {
   drawChart(
-    props.timeCtx.value,
+    props.timeCtx,
     priceCtx.value,
     mainCtx.value,
     props.width,
@@ -349,13 +350,16 @@ const handleResize = () => {
     scale.value,
     candleWidth.value,
     centerPrice.value,
-    priceRange.value
+    priceRange.value,
+    candels
   );
 };
 
 onMounted(() => {
-  const highs = candles.value.map((c) => c.high);
-  const lows = candles.value.map((c) => c.low);
+  // candels = props.charts.candels;
+
+  const highs = candels.map((c) => c.high);
+  const lows = candels.map((c) => c.low);
   centerPrice.value = (Math.max(...highs) + Math.min(...lows)) / 2;
   priceRange.value = Math.max(...highs) - Math.min(...lows);
   if (priceRange.value === 0) priceRange.value = 10;
@@ -370,7 +374,7 @@ onMounted(() => {
   const halfScreenWidth = props.width / 2;
   scale.value = halfScreenWidth / candlesWidthOnScreen;
 
-  const totalCandlesWidth = totalCandleWidth * candles.value.length;
+  const totalCandlesWidth = totalCandleWidth * candels.length;
   offset.value.x = -(totalCandlesWidth * scale.value) + props.width * 0.75;
 
   resizeEventBus.value.onResize(handleResize);
@@ -388,7 +392,8 @@ onMounted(() => {
     scale.value,
     candleWidth.value,
     centerPrice.value,
-    priceRange.value
+    priceRange.value,
+    candels
   );
 });
 

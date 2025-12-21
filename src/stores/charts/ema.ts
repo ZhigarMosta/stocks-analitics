@@ -1,6 +1,7 @@
 import { defineStore, storeToRefs } from "pinia";
 import { useChartCandelStore } from "./candel";
 import { useChartPriceStore } from "./price";
+import { ICandel } from "../user/user";
 
 export const useChartEmaStore = defineStore("chartEma", () => {
   function drawEMA(
@@ -12,14 +13,13 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     offset: { x: number; y: number },
     candleWidth: number,
     centerPrice: number,
-    priceRange: number
+    priceRange: number,
+    candles: Array<ICandel>
   ) {
-    const candelStore = useChartCandelStore();
-    const { candles } = storeToRefs(candelStore);
     const mainPrice = useChartPriceStore();
     const { scaleYFromPrice } = mainPrice;
 
-    if (!candles.value.length) return;
+    if (!candles.length) return;
 
     ctx.save();
     ctx.lineWidth = 1;
@@ -28,7 +28,7 @@ export const useChartEmaStore = defineStore("chartEma", () => {
 
     const stepX = candleWidth + spacing;
 
-    candles.value.forEach((candle, i) => {
+    candles.forEach((candle, i) => {
       const x = i * stepX + candleWidth / 2;
       let y;
 
@@ -96,20 +96,19 @@ export const useChartEmaStore = defineStore("chartEma", () => {
     scale: number,
     candleWidth: number,
     centerPrice: number,
-    priceRange: number
+    priceRange: number,
+    candles: Array<ICandel>
   ) {
-    const candelStore = useChartCandelStore();
-    const { candles } = storeToRefs(candelStore);
     const mainPrice = useChartPriceStore();
     const { scaleYFromPrice } = mainPrice;
 
-    if (!candles.value.length) return false;
+    if (!candles.length) return false;
 
     const stepX = candleWidth + spacing;
 
-    for (let i = 0; i < candles.value.length - 1; i++) {
-      const currentCandle = candles.value[i];
-      const nextCandle = candles.value[i + 1];
+    for (let i = 0; i < candles.length - 1; i++) {
+      const currentCandle = candles[i];
+      const nextCandle = candles[i + 1];
 
       const x1 = i * stepX + candleWidth / 2;
       const y1 = scaleYFromPrice(

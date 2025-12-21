@@ -5,6 +5,7 @@ import { useChartPriceStore } from "./price";
 import { useChartVolumeStore } from "./volume";
 import { useChartEmaStore } from "./ema";
 import { useChartTimeStore } from "./time";
+import { ICandel } from "../user/user";
 
 export const TIME_CANVAS_HEIGHT = 40;
 
@@ -18,14 +19,13 @@ export const useChartMainStore = defineStore("chartMain", () => {
     scale: number,
     candleWidth: number,
     centerPrice: number,
-    priceRange: number
+    priceRange: number,
+    candles: Array<ICandel>
   ) {
-    const candelStore = useChartCandelStore();
-    const { candles } = storeToRefs(candelStore);
     const priceStore = useChartPriceStore();
     const { scaleYFromPrice } = priceStore;
 
-    candles.value.forEach((c, i) => {
+    candles.forEach((c, i) => {
       const x = i * (candleWidth + spacing) + candleWidth / 2;
       const highY = scaleYFromPrice(
         c.high,
@@ -67,13 +67,13 @@ export const useChartMainStore = defineStore("chartMain", () => {
     scale: number,
     candleWidth: number,
     centerPrice: number,
-    priceRange: number
+    priceRange: number,
+    candles: Array<ICandel>
   ) {
     const levelStore = useLevelStore();
     const { drawLevels } = levelStore;
     const candelStore = useChartCandelStore();
     const { drawCandlesBodiesOnly } = candelStore;
-    const { candles } = storeToRefs(candelStore);
     const volumeStore = useChartVolumeStore();
     const { drawVolumes } = volumeStore;
     const emaStore = useChartEmaStore();
@@ -107,9 +107,10 @@ export const useChartMainStore = defineStore("chartMain", () => {
       offset,
       candleWidth,
       centerPrice,
-      priceRange
+      priceRange,
+      candles
     );
-    drawVolumes(context, height, spacing, candleWidth);
+    drawVolumes(context, height, spacing, candleWidth, candles);
     drawEMA(
       context,
       false,
@@ -119,7 +120,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
       offset,
       candleWidth,
       centerPrice,
-      priceRange
+      priceRange,
+      candles
     );
 
     context.restore();
@@ -132,7 +134,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
       spacing,
       offset,
       scale,
-      candleWidth
+      candleWidth,
+      candles
     );
     drawWicksUnscaled(
       context,
@@ -143,7 +146,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
       scale,
       candleWidth,
       centerPrice,
-      priceRange
+      priceRange,
+      candles
     );
     drawHoverLine(
       context,
@@ -176,7 +180,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
       scale,
       candleWidth,
       centerPrice,
-      priceRange
+      priceRange,
+      candles
     );
     drawHoverHighLowLine(
       context,
@@ -186,7 +191,8 @@ export const useChartMainStore = defineStore("chartMain", () => {
       spacing,
       offset,
       scale,
-      candleWidth
+      candleWidth,
+      candles
     );
     drawTimeAxis(width, candleWidth, spacing, offset, scale, candles, timeCtx);
   }

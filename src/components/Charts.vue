@@ -21,10 +21,13 @@
 
       <div>
         <Chart
+        v-for="(chart, index) in props.charts"
           v-if="timeCtx"
+          :key="index"
           :timeCtx="timeCtx"
           :width="width"
           :height="height"
+          :charts="chart"
         />
         <canvas
           ref="timeCanvas"
@@ -83,6 +86,13 @@ import { Instruments, useInstrumentStore } from "@/stores/instruments/main";
 import Chart from "./Chart.vue";
 import { TIME_CANVAS_HEIGHT } from "@/stores/charts/time";
 import { resizeEventBus } from "@/eventBuses/resize-bus";
+import { IChart } from "@/stores/user/user";
+
+const props = defineProps<{
+  window_id: number;
+  height: number;
+  charts: Array<IChart>;
+}>();
 
 const chartContainer = ref(null);
 const widthInstrumentsAndPrice = 160;
